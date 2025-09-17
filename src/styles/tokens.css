@@ -1,0 +1,21 @@
+:root{
+  /* brand + surfaces */
+  --bg:#121419;
+  --panel:#20242c;
+  --ring:#2b3140;
+  --focus:#3b82f6;
+
+  /* text */
+  --ink:#e9edf4;
+  --muted:#9aa3b2;
+
+  /* states */
+  --ok:#22c55e;
+  --err:#ef4444;
+
+  /* bracket specifics */
+  --slot-bg:#3a3f48;     /* row background */
+  --seed-bg:#4a4f58;     /* brighter than slot */
+  --score-bg:#2d3139;    /* score box */
+  --score-win:#ff6a2f;   /* winner highlight */
+}

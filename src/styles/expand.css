@@ -1,0 +1,45 @@
+.expand-panel{
+  margin-top:10px; border:1px solid var(--ring);
+  background:#191d24; border-radius:12px; padding:12px;
+}
+.expand-inner{
+  display:grid; grid-template-columns:260px 1fr; gap:12px; align-items:start;
+}
+
+/* left: players list */
+.players-col{
+  border:1px solid var(--ring); border-radius:10px; background:#151a20; padding:12px;
+}
+.players-col h3{ margin:0 0 8px 0; font-size:14px; color:#cfd6e3 }
+.players-actions{ display:flex; gap:8px; margin-bottom:8px }
+.player-list{ max-height:360px; overflow:auto; padding-right:6px }
+.player-item{
+  display:flex; align-items:center; justify-content:space-between;
+  border:1px solid var(--ring); border-radius:8px; padding:8px; margin-bottom:6px;
+  background:#0f141a; font-size:13px;
+}
+
+/* right: bracket viewport */
+.bracket-col{
+  border:1px solid var(--ring); border-radius:10px; background:#0f141a; padding:12px;
+  max-height:70vh; overflow:auto; -webkit-overflow-scrolling:touch;
+}
+.bracket-track{ display:flex; gap:16px; min-width:max-content; min-height:max-content }
+.round{ min-width:250px }
+.round h4{
+  margin:0 0 8px 0; font-size:13px; color:#9aa3b2; text-transform:uppercase; letter-spacing:.04em;
+}
+
+/* simple match look used in preview lists */
+.match{
+  border:1px solid var(--ring); border-radius:10px; background:#11161d;
+  margin-bottom:10px; padding:8px;
+}
+.slot{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:6px 8px; border-radius:8px; font-size:12px;
+  background:#0c1218; margin-bottom:6px;
+}
+.slot:last-child{ margin-bottom:0 }
+.slot .seed{ opacity:.7; font-variant-numeric:tabular-nums }
+.match .meta{ font-size:11px; color:#9aa3b2; margin-top:6px }

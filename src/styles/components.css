@@ -1,0 +1,43 @@
+/* form */
+.form{ display:grid; gap:14px }
+.field{ display:grid; gap:6px }
+.label{ font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px }
+.req{ font-size:11px; color:#ffb4b4 }
+
+.control{
+  appearance:none; width:100%;
+  background:#151922; border:1px solid var(--ring); color:var(--ink);
+  padding:12px 12px; border-radius:10px;
+}
+.control:focus{ outline:2px solid var(--focus); outline-offset:1px; border-color:#2a406b }
+textarea.control{ resize:vertical }
+
+.actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:8px }
+
+.btn{
+  appearance:none; border:1px solid var(--ring);
+  background:#0f1a28; color:var(--ink);
+  padding:10px 14px; border-radius:10px; cursor:pointer;
+}
+.btn:focus{ outline:2px solid var(--focus); outline-offset:1px }
+.btn.sm{ padding:6px 10px; border-radius:8px; font-size:12px }
+
+/* summary key/values */
+.kv{
+  display:flex; justify-content:space-between; align-items:center;
+  background:#191d24; border:1px solid var(--ring); border-radius:10px;
+  padding:10px; margin-bottom:8px;
+}
+.k{ font-size:12px; color:var(--muted) }
+.v{ font-weight:700 }
+.summary{ display:grid; gap:8px }
+
+/* notices / empties / pager */
+.error{
+  background:#23171a; border:1px solid #5a1a21; color:#ffd7db;
+  padding:10px; border-radius:10px; font-size:13px; display:none;
+}
+.empty{ font-size:12px; color:var(--muted); padding:6px 0 }
+
+.pager{ display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap }
+.pager .k{ font-size:12px }

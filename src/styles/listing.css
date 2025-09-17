@@ -1,0 +1,5 @@
+/* container cards already use .card */
+.card-header{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+}
+.tournament-list{ /* populated by React */ }

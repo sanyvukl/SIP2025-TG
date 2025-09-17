@@ -1,20 +1,25 @@
-import "./App.css";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import CreateTournamentPage from "./pages/CreateTournamentPage"
+import PendingPage from "./pages/PendingPage"
+import ActivePage from "./pages/ActivePage"
+import PastPage from "./pages/PastPage"
 
-function App() {
+
+
+export default function App() {
   return (
-    <div className="shell">
-      <header className="header">
-        <div className="title">Create Tournament</div>
-        <div className="help">
-          Creates only <strong>Tournament</strong> and <strong>Player</strong> records. No matches here.
-        </div>
-      </header>
-
-      <p style={{opacity:.7}}>
-        React app is running. Next step: wire your form + sections.
-      </p>
-    </div>
+    <Router>
+      <Header />
+      <main style={{ padding: "20px" }}>
+        <Routes>
+          <Route path="/" element={<CreateTournamentPage />} />
+          <Route path="/pending" element={<PendingPage />} />
+          <Route path="/active" element={<ActivePage />} />
+          <Route path="/past" element={<PastPage />} />
+        </Routes>
+      </main>
+    </Router>
   );
 }
-
-export default App;
