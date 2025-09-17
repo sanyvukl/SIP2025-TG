@@ -1,23 +1,18 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div className="shell">
+      <header className="header">
+        <div className="title">Create Tournament</div>
+        <div className="help">
+          Creates only <strong>Tournament</strong> and <strong>Player</strong> records. No matches here.
+        </div>
       </header>
+
+      <p style={{opacity:.7}}>
+        React app is running. Next step: wire your form + sections.
+      </p>
     </div>
   );
 }
