@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   listPlayers,
-  listMatches,          // add this in your ../api/tournaments
-  saveMatchScore,       // add this in your ../api/tournaments
-  advanceMatch          // add this in your ../api/tournaments
+  listMatches,           
+  saveMatchScore,        
+  advanceMatch           
 } from "../api/tournaments";
 
 // helpers
@@ -75,79 +75,119 @@ export default function ActiveExpand({ tournament }) {
     return aw ^ bw;
   };
 
+  // Single source of truth for win state + score highlights
+  function computeWins(m, raceTo, clamp) {
+    const a = clamp(m.slot_a_score);
+    const b = clamp(m.slot_b_score);
+
+    const liveA = raceTo > 0 && a === raceTo && b < raceTo && m.status !== "completed";
+    const liveB = raceTo > 0 && b === raceTo && a < raceTo && m.status !== "completed";
+
+    const finalA = m.status === "completed" && m.winner_id && m.winner_id === m.slot_a_player_id;
+    const finalB = m.status === "completed" && m.winner_id && m.winner_id === m.slot_b_player_id;
+
+    return {
+      a, b,
+      aScoreWin: liveA || finalA,
+      bScoreWin: liveB || finalB,
+      exactlyOneLive: liveA ^ liveB,
+    };
+  }
+
+  // One gate for controls (score buttons and Advance)
+  function computeInteractivity(m, wins) {
+    const hasA = !!m.slot_a_player_id;
+    const hasB = !!m.slot_b_player_id;
+    const oneSided = hasA ^ hasB;              // BYE if true
+    const busy = !!(m.__advBusy || m.__scoreBusy);
+
+    const isLiveRound = m.status === "in_progress";
+
+    // Score buttons only when both players present, live, and not busy
+    const scoreEnabled = isLiveRound && hasA && hasB && !busy;
+
+    // Advance is allowed only when:
+    // - live round
+    // - not busy
+    // - exactly one live winner (raceTo reached) AND both players present
+    // NOTE: one-sided (BYE) *not* actionable from UI because backend auto-advances.
+    const advanceEnabled = isLiveRound && !busy && hasA && hasB && wins.exactlyOneLive;
+
+    return { scoreEnabled, advanceEnabled, busy, hasA, hasB, oneSided };
+  }
+
+  function patchMatch(mid, patch) {
+    setMatches(prev => prev.map(m => (m.id === mid ? { ...m, ...patch } : m)));
+  }
+
   async function updateScores(mid, a, b) {
     a = clamp(a); b = clamp(b);
-    // optimistic UI
-    setMatches(prev => prev.map(m => m.id === mid ? { ...m, slot_a_score: a, slot_b_score: b } : m));
+
+    // optimistic + lock score controls
+    patchMatch(mid, { slot_a_score: a, slot_b_score: b, __scoreBusy: true });
+
     try {
       await saveMatchScore(tid, mid, a, b);
+
       if (autoAdvance && oneSideWon(a, b)) {
+        // NOTE: this will refresh matches; no need to unlock here if list reloads
         await handleAdvance(mid, /*silent*/true);
       }
     } catch (e) {
       alert("Save failed: " + e.message);
+    } finally {
+      // If handleAdvance fetched fresh matches, this patch is harmless; if not, it unlocks UI.
+      patchMatch(mid, { __scoreBusy: false });
     }
   }
 
   async function handleAdvance(mid, silent=false) {
-    // optimistic: disable button via local flag
-    setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: true } : m));
+    withGridScrollPreserved(() => {
+      setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: true } : m));
+    });
     try {
-      await advanceMatch(tid, mid);
+      const res = await advanceMatch(tid, mid);
       const fresh = await listMatches(tid);
       setMatches(fresh);
+
       if (!silent) alert("Advanced.");
     } catch (e) {
       alert("Advance failed: " + e.message);
-      setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: false } : m));
+      withGridScrollPreserved(() => {
+        setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: false } : m));
+      });
     }
   }
 
-  function ScoreBox({ m, slot }) {
-    const disabled = m.status === "completed";
+  function ScoreBox({ m, slot, scoreWin, scoreEnabled }) {
     const val = clamp(slot === "A" ? m.slot_a_score : m.slot_b_score);
-    const canInc = raceTo > 0 ? val < raceTo : true;
-    const canDec = val > 0;
+
+    const canInc = scoreEnabled && (raceTo > 0 ? val < raceTo : true);
+    const canDec = scoreEnabled && val > 0;
 
     const bump = (delta) => {
+      if (!scoreEnabled) return;
       const a0 = clamp(m.slot_a_score);
       const b0 = clamp(m.slot_b_score);
       if (slot === "A") updateScores(m.id, clamp(a0 + delta), b0);
-      else updateScores(m.id, a0, clamp(b0 + delta));
-    };
-
-    const onChange = (e) => {
-      const v = clamp(e.target.value);
-      if (slot === "A") updateScores(m.id, v, clamp(m.slot_b_score));
-      else updateScores(m.id, clamp(m.slot_a_score), v);
+      else              updateScores(m.id, a0, clamp(b0 + delta));
     };
 
     return (
-      <div style={{ display:'flex', alignItems:'stretch' }}>
-        <button
-          className="mx-bump"
-          onClick={()=>bump(-1)}
-          disabled={disabled || !canDec}
-          style={bumpStyle(disabled || !canDec)}
-        >−</button>
-        <input
-          className="mx-score"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          step={1}
-          {...(raceTo > 0 ? { max: raceTo } : {})}
-          value={val}
-          disabled={disabled}
-          onChange={onChange}
-          style={scoreInputStyle(disabled)}
-        />
-        <button
-          className="mx-bump"
-          onClick={()=>bump(1)}
-          disabled={disabled || !canInc}
-          style={bumpStyle(disabled || !canInc)}
-        >+</button>
+      <div style={{ display: "flex", alignItems: "stretch", opacity: scoreEnabled ? 1 : 0.6 }}>
+        <button className="mx-bump" onClick={() => bump(-1)}
+          disabled={!canDec} aria-disabled={!canDec} style={bumpStyle(!canDec)}>−</button>
+
+        <div className="mx-score" style={{
+          ...scoreInputStyle(!scoreEnabled),
+          display: "flex", alignItems: "center", justifyContent: "center",
+          ...(scoreWin ? { background: "var(--score-win)", color: "var(--ink)" } : null),
+        }}>
+          {val}
+        </div>
+
+        <button className="mx-bump" onClick={() => bump(1)}
+          disabled={!canInc} aria-disabled={!canInc} style={bumpStyle(!canInc)}>+</button>
       </div>
     );
   }
@@ -158,31 +198,29 @@ export default function ActiveExpand({ tournament }) {
     const aSeed = A.seed ?? "-";
     const bSeed = B.seed ?? "-";
 
-    const a = clamp(m.slot_a_score);
-    const b = clamp(m.slot_b_score);
-    const aWins = raceTo > 0 && a === raceTo && b < raceTo;
-    const bWins = raceTo > 0 && b === raceTo && a < raceTo;
+    const wins = computeWins(m, raceTo, clamp);
+    const ui   = computeInteractivity(m, wins);
 
-    const advDisabled = m.status === "completed" || !(aWins ^ bWins) || m.__advBusy;
+    const advDisabled = !ui.advanceEnabled;
 
     return (
       <div className="mx-card" data-mid={m.id} style={mxCard}>
         {/* Slot A */}
-        <div className="mx-slot" data-slot="A" style={{...mxSlot, ...(aWins ? winnerSlot : null)}}>
+        <div className="mx-slot" data-slot="A" style={mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{aSeed}</div>
             <div className="mx-name" style={mxName}>{escapeHtml(A.name || "—")}</div>
           </div>
-          <ScoreBox m={m} slot="A" />
+          <ScoreBox m={m} slot="A" scoreWin={wins.aScoreWin} scoreEnabled={ui.scoreEnabled} />
         </div>
 
         {/* Slot B */}
-        <div className="mx-slot" data-slot="B" style={{...mxSlot, ...(bWins ? winnerSlot : null)}}>
+        <div className="mx-slot" data-slot="B" style={mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{bSeed}</div>
             <div className="mx-name" style={mxName}>{escapeHtml(B.name || "—")}</div>
           </div>
-          <ScoreBox m={m} slot="B" />
+          <ScoreBox m={m} slot="B" scoreWin={wins.bScoreWin} scoreEnabled={ui.scoreEnabled} />
         </div>
 
         <div className="mx-actions" style={mxActions}>
@@ -190,15 +228,19 @@ export default function ActiveExpand({ tournament }) {
             className="btn sm"
             onClick={()=>handleAdvance(m.id)}
             disabled={advDisabled}
-            style={{
-              ...btnSm,
-              ...(advDisabled ? { opacity:.55, cursor:'not-allowed' } : null)
-            }}
+            style={{ ...btnSm, ...(advDisabled ? { opacity:.55, cursor:'not-allowed' } : null) }}
+            title={
+              m.status === "completed" ? "Match completed"
+              : ui.oneSided ? "BYE — auto-advancing from server"
+              : !ui.advanceEnabled ? "Waiting for a winner"
+              : undefined
+            }
           >
             {m.__advBusy ? "Advancing…" : (m.status === "completed" ? "Advanced" : "Advance")}
           </button>
+
           <span className={`badge ${m.status}`} style={{
-            fontSize:10, padding:'3px 6px', border:'1px solid var(--ring)', borderRadius:6, color:'#cfd6e3',
+            fontSize:10, padding:'3px 6px', borderRadius:6, color:'#cfd6e3',
             background: m.status === 'completed' ? '#0f2a17'
               : m.status === 'in_progress' ? '#112036'
               : '#2a2f37',
@@ -232,6 +274,30 @@ export default function ActiveExpand({ tournament }) {
       </div>
     );
   }
+  function withGridScrollPreserved(cb) {
+    const el = document.getElementById(`activeGrid_${tid}`);
+    const prevTop = el?.scrollTop ?? 0;
+    const prevLeft = el?.scrollLeft ?? 0;
+
+    const ret = cb(); // do your state updates / re-fetches
+
+    // Restore after React paints
+    requestAnimationFrame(() => {
+      const el2 = document.getElementById(`activeGrid_${tid}`);
+      if (el2) {
+        el2.scrollTop = prevTop;
+        el2.scrollLeft = prevLeft;
+      }
+    });
+
+    return ret;
+  }
+
+  function isInteractive(m) {
+  const hasA = !!m.slot_a_player_id;
+  const hasB = !!m.slot_b_player_id;
+  return m.status === "in_progress" && hasA && hasB;
+}
 
   return (
     <div className="active-panel" style={panel}>
@@ -281,7 +347,7 @@ export default function ActiveExpand({ tournament }) {
               )}
 
               {/* Finals */}
-              {grid.finals.length > 0 && (
+              {String(tournament.format).toLowerCase() === "double" && grid.finals.length > 0 && (
                 <Section title="Finals">
                   <RoundCol title="Grand Final" list={grid.finals} />
                 </Section>
@@ -293,6 +359,7 @@ export default function ActiveExpand({ tournament }) {
     </div>
   );
 }
+
 
 /* ---------------- inline styles (kept minimal & consistent with your theme) ---------------- */
 const panel     = { border:'1px solid var(--ring)', background:'#191d24', borderRadius:12, padding:12, marginTop:10, marginBottom:12 };
@@ -342,7 +409,7 @@ const roundHead = { fontSize:12, color:'#9aa3b2', textTransform:'uppercase', let
 const sectionHead = { display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'#cfd6e3', textTransform:'uppercase', letterSpacing:'.04em', margin:'0 0 10px 0' };
 
 const mxCard    = { width:220, border:'1px solid var(--ring)', borderRadius:4, overflow:'hidden', display:'grid', gridTemplateRows:'28px 28px auto', background:'#22262d', marginBottom:16 };
-const mxSlot    = { display:'flex', alignItems:'stretch', justifyContent:'space-between', background:'#3a3f48', fontSize:13, lineHeight:1, borderTop:'1px solid var(--ring)' };
+const mxSlot    = { display:'flex', alignItems:'stretch', justifyContent:'space-between', background:'#3a3f48', fontSize:13, lineHeight:1 };
 const mxLeft    = { display:'flex', alignItems:'center', flex:1, minWidth:0, height:'100%' };
 const mxSeed    = { background:'#4a4f58', color:'#cfd6e3', fontSize:11, fontWeight:600, minWidth:24, padding:'0 4px', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', height:'100%', borderRight:'1px solid var(--ring)' };
 const mxName    = { flex:1, height:'100%', display:'flex', alignItems:'center', padding:'0 8px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' };

@@ -1,5 +1,5 @@
 // Minimal API client mirroring your FormData calls
-const API_URL = 'https://script.google.com/macros/s/AKfycbyq1N2K9mYNJLdi3rJE1AUTWl-M6bGFPEaL-eO5tEpXRrkZCEnjoKx2EA-RoQ5KauXlBw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycby1_MG_PdQOmFB2FHdokMmNp3w6YxE5hWHh9ne3n48gWWPMbQfp9mnueUtRClodP5Iztw/exec';
 
 async function postFD(fd) {
   const res = await fetch(API_URL, { method: 'POST', body: fd });
@@ -25,14 +25,6 @@ export async function createFullBracket(tournament_id) {
   fd.append('action', 'createFullBracket');
   fd.append('tournament_id', tournament_id);
   return postFD(fd); // { tournament_id, format, created, byes }
-}
-
-// Optional (if you keep a separate "startTournament" flag in backend)
-export async function startTournament(tournament_id) {
-  const fd = new FormData();
-  fd.append('action', 'startTournament');
-  fd.append('tournament_id', tournament_id);
-  return postFD(fd);
 }
 
 // ===== Players =====
