@@ -7,7 +7,13 @@ import {
 } from "../api/tournaments";
 
 // helpers
-const cssEscape = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+// === Layout constants (measured) ===
+  // MatchCard content height (NOT including margin)
+  const MATCH_HEIGHT_PX = 101;
+  // Bottom margin between cards in R1
+  const MATCH_MARGIN_PX = 16;
+  // “Stride” = distance from top of one card to the top of the next in R1
+  const BASE_STRIDE_PX = MATCH_HEIGHT_PX + MATCH_MARGIN_PX; // 117
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
@@ -174,7 +180,7 @@ export default function ActiveExpand({ tournament }) {
     };
 
     return (
-      <div style={{ display: "flex", alignItems: "stretch", opacity: scoreEnabled ? 1 : 0.6 }}>
+      <div style={{ display: "flex", alignItems: "stretch", opacity: scoreEnabled ? 1 : 0.9 }}>
         <button className="mx-bump" onClick={() => bump(-1)}
           disabled={!canDec} aria-disabled={!canDec} style={bumpStyle(!canDec)}>−</button>
 
@@ -255,25 +261,44 @@ export default function ActiveExpand({ tournament }) {
     );
   }
 
-  function RoundCol({ title, list }) {
-    return (
-      <div className="round-col" style={{ width:240, flex:'0 0 auto' }}>
-        <div className="round-head" style={roundHead}>
-          {title}
+  function RoundCol({ title, list, roundIndex }) {
+  // For R1 -> 117, R2 -> 234, R3 -> 468 ... doubles each round
+  const spacing = Math.pow(2, Math.max(0, (roundIndex ?? 1) - 1)) * BASE_STRIDE_PX;
+
+  return (
+    <div className="round-col" style={{ width: 240, flex: '0 0 auto' }}>
+      <div className="round-head" style={roundHead}>{title}</div>
+
+      {list.map((m, i) => (
+        <div
+          key={m.id}
+          // We wrap each MatchCard so we can control vertical offset cleanly
+          style={{
+            // First card in the column sits at the top; subsequent cards
+            // get a marginTop equal to the round’s stride so they land
+            // halfway between their feeders from the previous round.
+            marginTop: i === 0 ? 0 : spacing,
+          }}
+        >
+          <MatchCard m={m} />
         </div>
-        {list.map(m => <MatchCard key={m.id} m={m} />)}
-      </div>
-    );
+      ))}
+    </div>
+  );
   }
+
+
 
   function Section({ title, children }) {
     return (
       <div className="section" style={{ marginBottom:18 }}>
         <div className="section-head" style={sectionHead}>{title}</div>
-        <div className="track" style={track}>{children}</div>
+        {/* IMPORTANT: block container, not inline-flex */}
+        <div className="section-body">{children}</div>
       </div>
     );
   }
+
   function withGridScrollPreserved(cb) {
     const el = document.getElementById(`activeGrid_${tid}`);
     const prevTop = el?.scrollTop ?? 0;
@@ -293,11 +318,97 @@ export default function ActiveExpand({ tournament }) {
     return ret;
   }
 
-  function isInteractive(m) {
-  const hasA = !!m.slot_a_player_id;
-  const hasB = !!m.slot_b_player_id;
-  return m.status === "in_progress" && hasA && hasB;
-}
+  function computeGridMeta(rounds) {
+    const R = rounds.length || 1;
+    const n1 = Math.max(1, rounds[0]?.matches?.length || 1); // be defensive with data
+    // total rows = (#R1 matches * 2) - 1   (works for any power of two field)
+    const totalRows = n1 * 2 - 1;
+
+    function loc(r, i) {
+      // span doubles each round
+      const span = Math.pow(2, r - 1);
+      // 1,3,5,... for r=1 ; 2,6,10,... for r=2; etc.
+      const start = span + (i - 1) * (span * 2);
+      return { start, span };
+    }
+    return { totalRows, loc, roundsCount: R };
+  }
+
+  function ColumnsHead({ rounds, prefix }) {
+    return (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${rounds.length}, 240px)`,
+          columnGap: 18,
+          marginBottom: 8,
+        }}
+      >
+        {rounds.map((col, i) => (
+          <div key={`${prefix}-head-${i}`} style={roundHead}>
+            {`${prefix} · R${col.title}`}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function BracketGrid({ rounds }) {
+    const { totalRows, loc, roundsCount } = computeGridMeta(rounds);
+
+    return (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${roundsCount}, 240px)`,
+          columnGap: 18,
+          gridTemplateRows: `repeat(${totalRows}, ${MATCH_HEIGHT_PX}px)`,
+          rowGap: MATCH_MARGIN_PX,
+          alignItems: 'start',
+        }}
+      >
+        {rounds.map((col, rIdx) =>
+          col.matches.map((m, i) => {
+            const { start, span } = loc(rIdx + 1, i + 1);
+            return (
+              <div
+                key={m.id}
+                style={{
+                  gridColumn: rIdx + 1,
+                  gridRow: `${start} / span ${span}`,
+                }}
+              >
+                <MatchCard m={m} />
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  }
+
+
+
+  function TrackGrid({ rounds, renderCol }) {
+    const cols = rounds.length || 1;
+
+    return (
+      <div
+        className="track-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${cols}, minmax(240px, 1fr))`,
+          columnGap: 18,
+          alignItems: 'start',
+          // Let it stretch when few cols; scroll when many
+          minWidth: 0,
+        }}
+      >
+        {rounds.map((col, i) => renderCol(col, i))}
+      </div>
+    );
+  }
+
 
   return (
     <div className="active-panel" style={panel}>
@@ -329,29 +440,42 @@ export default function ActiveExpand({ tournament }) {
               {/* Winners */}
               <Section title="Winners Bracket">
                 {grid.winners.length ? (
-                  grid.winners.map((col, i) =>
-                    <RoundCol key={`W-${i}`} title={`W · R${col.title}`} list={col.matches} />
-                  )
-                ) : <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>}
+                  <>
+                    <ColumnsHead rounds={grid.winners} prefix="W" />
+                    <BracketGrid rounds={grid.winners} />
+                  </>
+                ) : (
+                  <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+                )}
               </Section>
 
-              {/* Losers (only if double) */}
+              {/* Losers (double only) */}
               {String(tournament.format).toLowerCase() === "double" && (
                 <Section title="Losers Bracket">
                   {grid.losers.length ? (
-                    grid.losers.map((col, i) =>
-                      <RoundCol key={`L-${i}`} title={`L · R${col.title}`} list={col.matches} />
-                    )
-                  ) : <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>}
+                    <>
+                      <ColumnsHead rounds={grid.losers} prefix="L" />
+                      <BracketGrid rounds={grid.losers} />
+                    </>
+                  ) : (
+                    <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+                  )}
                 </Section>
               )}
 
-              {/* Finals */}
-              {String(tournament.format).toLowerCase() === "double" && grid.finals.length > 0 && (
-                <Section title="Finals">
-                  <RoundCol title="Grand Final" list={grid.finals} />
-                </Section>
-              )}
+
+{/* Finals (double only) */}
+{String(tournament.format).toLowerCase() === "double" && grid.finals.length > 0 && (
+  <Section title="Finals">
+    <TrackGrid
+      rounds={[{ title: 'GF', matches: grid.finals }]}
+      renderCol={(col, i) => (
+        <RoundCol key={`G-${i}`} title="Grand Final" list={col.matches} />
+      )}
+    />
+  </Section>
+)}
+
             </div>
           </div>
         </div>
@@ -397,18 +521,20 @@ const gridShell = {
   WebkitOverflowScrolling:'touch',
   boxSizing:'border-box'
 };
-const track = {
-  /* inline-flex avoids parent width = max-content */
-  display:'inline-flex',
-  gap:18,
-  alignItems:'flex-start',
-  /* no min/max-content forcing; it can be wider than shell and will scroll */
-  padding:'6px 2px'
-};
+
 const roundHead = { fontSize:12, color:'#9aa3b2', textTransform:'uppercase', letterSpacing:'.04em', margin:'0 0 8px 0', textAlign:'center' };
 const sectionHead = { display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'#cfd6e3', textTransform:'uppercase', letterSpacing:'.04em', margin:'0 0 10px 0' };
 
-const mxCard    = { width:220, border:'1px solid var(--ring)', borderRadius:4, overflow:'hidden', display:'grid', gridTemplateRows:'28px 28px auto', background:'#22262d', marginBottom:16 };
+const mxCard = {
+  width:220,
+  border:'1px solid var(--ring)',
+  borderRadius:4,
+  overflow:'hidden',
+  display:'grid',
+  gridTemplateRows:'28px 28px auto',
+  background:'#22262d',
+};
+
 const mxSlot    = { display:'flex', alignItems:'stretch', justifyContent:'space-between', background:'#3a3f48', fontSize:13, lineHeight:1 };
 const mxLeft    = { display:'flex', alignItems:'center', flex:1, minWidth:0, height:'100%' };
 const mxSeed    = { background:'#4a4f58', color:'#cfd6e3', fontSize:11, fontWeight:600, minWidth:24, padding:'0 4px', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', height:'100%', borderRight:'1px solid var(--ring)' };
