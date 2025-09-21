@@ -23,6 +23,7 @@ export default function TournamentRow({
   initiallyExpanded = false,
   onBecameActive,
   onParticipantsChange,
+  onFinished
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
   return (
@@ -42,6 +43,7 @@ export default function TournamentRow({
           tournament={t}
           onBecameActive={onBecameActive}
           onParticipantsChange={onParticipantsChange}
+          onFinished={onFinished}
         />
       )}
     </>

@@ -59,6 +59,13 @@ export default function ActiveTournamentsSection({
   }
   function tick(){ load(page); }
 
+  function handleFinished(tournamentId) {
+    // Optimistic removal from the "active" list
+    setItems(prev => prev.filter(t => t.id !== tournamentId));
+    // (Optional) also refresh the current page from the server:
+    // load(page);
+  }
+
   // plumb through row-level callbacks that might affect counts
   function onParticipantsChange(tid, newCount) {
     setItems(prev => prev.map(x => x.id === tid ? ({ ...x, player_count: newCount }) : x));
@@ -96,6 +103,7 @@ export default function ActiveTournamentsSection({
                 t={t}
                 ExpandComponent={ActiveExpand}
                 onParticipantsChange={onParticipantsChange}
+                onFinished={handleFinished}
               />
             ))
           )}

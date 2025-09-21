@@ -3,26 +3,24 @@ import {
   listPlayers,
   listMatches,           
   saveMatchScore,        
-  advanceMatch           
+  advanceMatch,
+  finishTournament,
+  getRanking
 } from "../api/tournaments";
+import PaneHeader from "./PaneHeader";
+import Standing from "./Standing";
 
-// helpers
-// === Layout constants (measured) ===
-  // MatchCard content height (NOT including margin)
-  const MATCH_HEIGHT_PX = 101;
-  // Bottom margin between cards in R1
-  const MATCH_MARGIN_PX = 16;
-  // “Stride” = distance from top of one card to the top of the next in R1
-  const BASE_STRIDE_PX = MATCH_HEIGHT_PX + MATCH_MARGIN_PX; // 117
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-export default function ActiveExpand({ tournament }) {
+export default function ActiveExpand({ tournament, onFinished }) {
   const tid = tournament.id;
   const [playersById, setPlayersById] = useState({});
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [autoAdvance, setAutoAdvance] = useState(false);
+  const [finishBusy, setFinishBusy] = useState(false);
+  const [activeTab, setActiveTab] = useState('tournament'); // 'tournament' | 'ranking'
+
   const raceTo = Number(tournament.race_to || 0);
 
   useEffect(() => {
@@ -43,6 +41,17 @@ export default function ActiveExpand({ tournament }) {
     return () => (mounted = false);
   }, [tid]);
 
+  const completion = useMemo(() => {
+    const statuses = (matches || []).map(m => String(m.status || '').toLowerCase());
+    const any = statuses.length > 0;
+    const allCompleted = any && statuses.every(s => s === 'completed');
+    const anyActive = statuses.some(s => s === 'in_progress' || s === 'pending');
+    return { any, allCompleted, anyActive };
+  }, [matches]);
+
+  const tournamentCompleted = String(tournament.status || '').toLowerCase() === 'completed';
+  const canFinish = completion.allCompleted && !tournamentCompleted;
+  
   // ---- render helpers ----
   function splitMatches(ms) {
     const W = {}, L = {}, G = [];
@@ -64,6 +73,14 @@ export default function ActiveExpand({ tournament }) {
       finals: G.sort((a,b)=>String(a.id).localeCompare(String(b.id)))
     };
   }
+
+  // change when any match status/completion timestamp changes
+  const rankingRefreshSignal = useMemo(() => {
+    return (matches || [])
+      .map(m => `${m.id}:${m.status}:${m.updated_at || ''}:${m.completed_at || ''}`)
+      .join('|');
+  }, [matches]);
+
 
   const grid = useMemo(() => splitMatches(matches), [matches]);
 
@@ -137,11 +154,6 @@ export default function ActiveExpand({ tournament }) {
 
     try {
       await saveMatchScore(tid, mid, a, b);
-
-      if (autoAdvance && oneSideWon(a, b)) {
-        // NOTE: this will refresh matches; no need to unlock here if list reloads
-        await handleAdvance(mid, /*silent*/true);
-      }
     } catch (e) {
       alert("Save failed: " + e.message);
     } finally {
@@ -320,6 +332,8 @@ export default function ActiveExpand({ tournament }) {
 
 
   const COL_W = 240;
+  const MATCH_MARGIN_PX = 16;
+
   function BracketFlex({ rounds, prefix = 'W', justify = 'space-around' ,}) {
 
     function HeaderRow() {
@@ -437,8 +451,26 @@ export default function ActiveExpand({ tournament }) {
   );
   }
 
+async function handleFinishTournament() {
+    if (finishBusy) return;
+    if (!window.confirm("Finish this tournament? This will lock results.")) return;
 
+    try {
+      setFinishBusy(true);
+      const res = await finishTournament(tournament.id /*, { force:true }*/);
+      onFinished(tournament.id);
+      alert("Tournament finished" + (res.winner_id ? ` — Champion: ${res.winner_name}` : ""));
+      // Tell parent to refresh active list (or remove this item)
 
+      // optional: local UX polish so the button disables immediately
+      // (parent should also drop this card from the Active page)
+      // You can also navigate away if you have routing.
+    } catch (e) {
+      alert("Failed to finish: " + e.message);
+    } finally {
+      setFinishBusy(false);
+    }
+  }
 
 
   return (
@@ -450,55 +482,73 @@ export default function ActiveExpand({ tournament }) {
           {/* Left rail */}
           <div className="left-rail" style={leftRail}>
             <div className="tabs-vertical" style={{ display:'grid', gap:8 }}>
-              <button className="tab active" style={tabActive}>Tournament</button>
-              <button className="tab" style={tab}>Ranking (TBD)</button>
+              <button
+                className={`tab ${activeTab === 'tournament' ? 'active' : ''}`}
+                style={activeTab === 'tournament' ? tabActive : tab}
+                onClick={() => setActiveTab('tournament')}
+              >
+                Tournament
+              </button>
+
+              <button
+                className={`tab ${activeTab === 'ranking' ? 'active' : ''}`}
+                style={activeTab === 'ranking' ? tabActive : tab}
+                onClick={() => setActiveTab('ranking')}
+              >
+                Ranking
+              </button>
             </div>
 
             <label className="toggle" style={{ display:'inline-flex', gap:8, alignItems:'center', fontSize:12, color:'var(--muted)'}}>
               <span>Race to: <strong>{raceTo || "—"}</strong></span>
-              <span>Auto-advance</span>
-              <input type="checkbox" checked={autoAdvance} onChange={e=>setAutoAdvance(e.target.checked)} />
             </label>
           </div>
 
           {/* Right pane */}
           <div className="right-pane" style={rightPane}>
-            <div className="pane-head" style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10}}>
-              <div className="pane-title" style={{ fontSize:14, fontWeight:700, color:'#cfd6e3' }}>Tournament</div>
-            </div>
+            <PaneHeader
+              title={activeTab === 'ranking' ? 'Ranking' : 'Tournament'}
+              onFinish={handleFinishTournament}
+              canFinish={canFinish}
+              finished={tournamentCompleted}
+              busy={finishBusy}
+            />
 
             <div id={`activeGrid_${tid}`} className="grid-shell" style={gridShell}>
-              <Section title="Winners Bracket">
-              {grid.winners.length ? (
-                <div style={{ display: 'flex', gap: 18, alignItems: 'stretch', paddingBottom: 4 }}>
-                  {(() => {
-                    return (
-                      <>
-                        <BracketFlex rounds={grid.winners} prefix="W" justify="space-around" />
-                        {grid.finals.length > 0 && (
-                          <FinalsRail finals={grid.finals} justify="space-around" />
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+  {activeTab === 'tournament' ? (
+    <>
+      <Section title="Winners Bracket">
+        {grid.winners.length ? (
+          <div style={{ display: 'flex', gap: 18, alignItems: 'stretch', paddingBottom: 4 }}>
+            <>
+              <BracketFlex rounds={grid.winners} prefix="W" justify="space-around" />
+              {grid.finals.length > 0 && (
+                <FinalsRail finals={grid.finals} justify="space-around" />
               )}
-              </Section>
+            </>
+          </div>
+        ) : (
+          <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+        )}
+      </Section>
 
-
-              {/* Losers Bracket */}
-              {String(tournament.format).toLowerCase() === "double" && (
-                <Section title="Losers Bracket">
-                  {grid.losers.length ? (
-                    <BracketFlex rounds={grid.losers} prefix="L" justify="space-around" />
-                  ) : (
-                    <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
-                  )}
-                </Section>
-              )} 
+      {String(tournament.format).toLowerCase() === "double" && (
+        <Section title="Losers Bracket">
+          {grid.losers.length ? (
+            <BracketFlex rounds={grid.losers} prefix="L" justify="space-around" />
+          ) : (
+            <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+          )}
+        </Section>
+      )}
+    </>
+  ) : (
+    <Section title="Standings">
+      <Standing tournamentId={tid} refreshSignal={rankingRefreshSignal} />
+    </Section>
+  )}
             </div>
+
           </div>
         </div>
       )}

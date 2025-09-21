@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { listTournaments } from "../api/tournaments";
 import PendingExpand from "./PendingExpand";
 
@@ -46,20 +46,24 @@ function Row({ t, initiallyExpanded = false, onBecameActive, onParticipantsChang
 export default function PendingTournamentsSection({
   pageSize = 5,
   title = "Pending Tournaments",
-  autoLoad = false,               // keep your previous UX where you click “Load”, unless you set this true
-  onPromoteToActive,              // parent callback to refresh other pages if needed
+  autoLoad = true,            // ✅ default to autoload like Active
+  onPromoteToActive,
 }) {
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ page:1, pages:1, has_prev:false, has_next:false, total:0 });
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Optional auto-refresh (mirrors Active)
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const timerRef = useRef(null);
+
   async function load(p = 1) {
     setLoading(true);
     try {
       const data = await listTournaments({ status: "pending", page: p, limit: pageSize });
       setItems(data.tournaments || []);
-      setMeta(data.meta || { page: p, pages: 1 });
+      setMeta(data.meta || { page: p, pages: 1, has_prev:false, has_next:false, total:0 });
       setPage(p);
     } catch (e) {
       alert("Failed to load pending: " + e.message);
@@ -70,13 +74,25 @@ export default function PendingTournamentsSection({
     }
   }
 
-  useEffect(()=>{ if (autoLoad) load(1); }, [autoLoad]);
+  // Autoload on mount (and when pageSize changes, like Active)
+  useEffect(() => { if (autoLoad) load(1); }, [autoLoad, pageSize]);
+
+  // Auto-refresh management (same pattern as Active)
+  useEffect(() => {
+    if (!autoRefresh) { clearTimer(); return; }
+    tick(); // immediate
+    timerRef.current = setInterval(tick, 15000);
+    return clearTimer;
+  }, [autoRefresh, page]);
+
+  function clearTimer(){
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }
+  function tick(){ load(page); }
 
   function onBecameActive() {
-    // Child told us a pending tournament just started.
     onPromoteToActive?.();
-    // Also refresh our own list so it disappears from pending.
-    load(page);
+    load(page); // remove from pending list
   }
 
   function onParticipantsChange(tid, newCount) {
@@ -87,9 +103,19 @@ export default function PendingTournamentsSection({
     <div className="card" style={{ ...cardStyle, marginBottom: 20 }}>
       <div className="card-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 12 }}>
         <h2 style={{ margin: 0 }}>{title}</h2>
-        <button className="btn" onClick={()=>load(1)} disabled={loading}>
-          {loading ? "Loading…" : (items.length ? "Reload" : "Load")}
-        </button>
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <label style={{ display:'inline-flex', gap:8, alignItems:'center', fontSize:12, color:'var(--muted)'}}>
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={e=>setAutoRefresh(e.target.checked)}
+            />
+            Auto-refresh (15s)
+          </label>
+          <button className="btn" onClick={()=>load(1)} disabled={loading}>
+            {loading ? "Refreshing…" : (items.length ? "Refresh" : "Load")}
+          </button>
+        </div>
       </div>
 
       <div className="tournament-list">

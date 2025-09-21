@@ -1,5 +1,5 @@
 // Minimal API client mirroring your FormData calls
-const API_URL = 'https://script.google.com/macros/s/AKfycby1_MG_PdQOmFB2FHdokMmNp3w6YxE5hWHh9ne3n48gWWPMbQfp9mnueUtRClodP5Iztw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwek1-cp47Xt4WJJMK4KOYCxGTmALlXdzNOXMgFDgeQRNcRThB6Z2HC7K4SGpJVUVN7VA/exec';
 
 async function postFD(fd) {
   const res = await fetch(API_URL, { method: 'POST', body: fd });
@@ -20,12 +20,14 @@ export async function listTournaments({ status, page = 1, limit = 5 }) {
   return postFD(fd); // { tournaments, meta }
 }
 
-export async function createFullBracket(tournament_id) {
+export async function createFullBracket(tournament_id, opts = {}) {
   const fd = new FormData();
   fd.append('action', 'createFullBracket');
   fd.append('tournament_id', tournament_id);
-  return postFD(fd); // { tournament_id, format, created, byes }
+  if (opts.pairs) fd.append('pairs', JSON.stringify(opts.pairs));  // <—
+  return postFD(fd);
 }
+
 
 // ===== Players =====
 export async function listPlayers(tournament_id) {
@@ -87,5 +89,26 @@ export async function advanceMatch(tournament_id, match_id) {
   fd.append('tournament_id', tournament_id);
   fd.append('match_id', match_id);
   return postFD(fd);
+}
+
+// Tournament
+export async function finishTournament(tournament_id, { force = false, winner_id = null } = {}) {
+  const fd = new FormData();
+  fd.append('action', 'finishTournament');
+  fd.append('tournament_id', String(tournament_id));
+  if (force) fd.append('force', 'true');
+  if (winner_id) fd.append('winner_id', String(winner_id));
+
+  return postFD(fd); 
+}
+
+export async function getRanking(tournament_id) {
+  const fd = new FormData();
+  fd.append('action', 'getRanking');
+  fd.append('tournament_id', tournament_id);
+  const res = await fetch(API_URL, { method: 'POST', body: fd });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Failed');
+  return data.standings; // array of ranking rows
 }
 
