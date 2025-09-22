@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { listTournaments } from "../api/tournaments";
+import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
-import PastExpand from "./ActiveExpand";
+import PastExpand from "./PastExpand";
 
 const card = {
   background: "var(--panel)",
@@ -101,6 +101,15 @@ export default function PastTournamentsSection({
     setItems((prev) => prev.map((x) => (x.id === tid ? { ...x, player_count: newCount } : x)));
   }
 
+  async function handleDelete(tid) {
+    try {
+      await deleteTournament(tid);
+      await load(page); // reload current page to reflect server truth (meta, pagination, etc.)
+    } catch (e) {
+      alert("Failed to delete tournament: " + e.message);
+    }
+  }
+
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto 20px" }}>
       <div className="card" style={card}>
@@ -141,7 +150,7 @@ export default function PastTournamentsSection({
                 t={t}
                 ExpandComponent={PastExpand}
                 onParticipantsChange={onParticipantsChange}
-                onDelete={()=>{}}
+                onDelete={handleDelete}
               />
             ))
           )}

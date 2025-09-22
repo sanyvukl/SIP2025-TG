@@ -257,7 +257,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
               : undefined
             }
           >
-            {m.__advBusy ? "Advancing…" : (m.status === "completed" ? "Advanced" : "Advance")}
+            {m.__advBusy ? "Submitting…" : (m.status === "completed" ? "Submitted" : "Submit")}
           </button>
 
           <span className={`badge ${m.status}`} style={{

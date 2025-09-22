@@ -92,7 +92,7 @@ export default function PastExpand({ tournament }) {
   const entrants = tournament?.player_count ?? players.length;
 
   return (
-    <div className="expand-panel" style={{ border:"1px solid var(--ring)", background:"#191d24", borderRadius:12, padding:12 }}>
+    <div className="expand-panel" style={{ border:"1px solid var(--ring)", background:"#191d24", borderRadius:12, padding:12, marginBottom:12 }}>
       {loading ? (
         <div style={{ color:"var(--muted)" }}>Loading past tournament…</div>
       ) : err ? (
