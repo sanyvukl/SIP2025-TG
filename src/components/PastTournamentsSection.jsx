@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { listTournaments, deleteTournament } from "../api/tournaments";
+import { listTournaments } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
-import ActiveExpand from "./ActiveExpand";
+import PastExpand from "./ActiveExpand";
 
 const card = {
   background: "var(--panel)",
@@ -32,12 +32,12 @@ const tools = {
  * - optional auto-refresh (off by default)
  * - fixed page size tuned for active lists
  */
-export default function ActiveTournamentsSection({
-  title = "Active Tournaments",
+export default function PastTournamentsSection({
+  title = "Past Tournaments",
   pageSize = 5,
   autoLoad = true,
 }) {
-  const status = "active";
+  const status = "completed";
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({
     page: 1,
@@ -96,25 +96,9 @@ export default function ActiveTournamentsSection({
     load(page);
   }
 
-  function handleFinished(tournamentId) {
-    // Optimistic removal from the "active" list
-    setItems((prev) => prev.filter((t) => t.id !== tournamentId));
-    // (Optional) also refresh the current page from the server:
-    // load(page);
-  }
-
   // plumb through row-level callbacks that might affect counts
   function onParticipantsChange(tid, newCount) {
     setItems((prev) => prev.map((x) => (x.id === tid ? { ...x, player_count: newCount } : x)));
-  }
-
-  async function handleDelete(tid) {
-    try {
-      await deleteTournament(tid);
-      await load(page); // reload current page to reflect server truth (meta, pagination, etc.)
-    } catch (e) {
-      alert("Failed to delete tournament: " + e.message);
-    }
   }
 
   return (
@@ -148,17 +132,16 @@ export default function ActiveTournamentsSection({
         <div className="tournament-list">
           {!items.length && !loading ? (
             <div className="empty" style={{ fontSize: 12, color: "var(--muted)", padding: "6px 0" }}>
-              No active tournaments.
+              No past tournaments.
             </div>
           ) : (
             items.map((t) => (
               <TournamentRow
                 key={t.id}
                 t={t}
-                ExpandComponent={ActiveExpand}
+                ExpandComponent={PastExpand}
                 onParticipantsChange={onParticipantsChange}
-                onFinished={handleFinished}
-                onDelete={handleDelete}
+                onDelete={()=>{}}
               />
             ))
           )}

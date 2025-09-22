@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { listTournaments } from "../api/tournaments";
+import { listTournaments, deleteTournament } from "../api/tournaments";
 import PendingExpand from "./PendingExpand";
+import TournamentRow from "./TournamentRow";
 
 const cardStyle = { background: "var(--panel)", border: "1px solid var(--ring)", borderRadius: 14, padding: 16 };
 const kvStyle = { display:"flex", justifyContent:"space-between", alignItems:"center", background:"#191d24", border:"1px solid var(--ring)", borderRadius:10, padding:10, marginBottom:8 };
@@ -18,29 +19,6 @@ function fmtDate(dt) {
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   } catch { return String(dt); }
-}
-
-function Row({ t, initiallyExpanded = false, onBecameActive, onParticipantsChange }) {
-  const [expanded, setExpanded] = useState(initiallyExpanded);
-  return (
-    <>
-      <div className="kv" style={kvStyle}>
-        <span className="v" style={{ fontWeight: 700 }}>{t.name || "-"}</span>
-        <span className="k" style={{ marginLeft: 8 }}>{fmtFormat(t.format)}</span>
-        <span className="k" data-field="participants">Participants: {Number(t.player_count) || 0}</span>
-        <span className="k" data-field="time">Date: {fmtDate(t.start_time)}</span>
-        <button className="btn" onClick={()=>setExpanded(v=>!v)}>{expanded ? "Collapse" : "Expand"}</button>
-      </div>
-
-      {expanded && (
-        <PendingExpand
-          tournament={t}
-          onBecameActive={(tid)=>onBecameActive?.(tid)}
-          onParticipantsChange={(tid, count)=>onParticipantsChange?.(tid, count)}
-        />
-      )}
-    </>
-  );
 }
 
 export default function PendingTournamentsSection({
@@ -99,6 +77,15 @@ export default function PendingTournamentsSection({
     setItems(prev => prev.map(x => x.id === tid ? { ...x, player_count: newCount } : x));
   }
 
+  async function handleDelete(tid) {
+    try {
+      await deleteTournament(tid);
+      await load(page); // reload current page to reflect server truth (meta, pagination, etc.)
+    } catch (e) {
+      alert("Failed to delete tournament: " + e.message);
+    }
+  }
+
   return (
     <div className="card" style={{ ...cardStyle, marginBottom: 20 }}>
       <div className="card-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 12 }}>
@@ -125,11 +112,13 @@ export default function PendingTournamentsSection({
           </div>
         ) : (
           items.map(t => (
-            <Row
+            <TournamentRow
               key={t.id}
               t={t}
               onBecameActive={onBecameActive}
               onParticipantsChange={onParticipantsChange}
+              ExpandComponent={PendingExpand}
+              onDelete={handleDelete}
             />
           ))
         )}

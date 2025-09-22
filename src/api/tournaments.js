@@ -1,5 +1,5 @@
 // Minimal API client mirroring your FormData calls
-const API_URL = 'https://script.google.com/macros/s/AKfycbwek1-cp47Xt4WJJMK4KOYCxGTmALlXdzNOXMgFDgeQRNcRThB6Z2HC7K4SGpJVUVN7VA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwjDu3Nx0E8lRSaevzTaEGWylbWtu91tJh3e9SIcRpJT1Ief8aaYT8wBXt5fQsHITpqlg/exec';
 
 async function postFD(fd) {
   const res = await fetch(API_URL, { method: 'POST', body: fd });
@@ -20,14 +20,20 @@ export async function listTournaments({ status, page = 1, limit = 5 }) {
   return postFD(fd); // { tournaments, meta }
 }
 
+export async function deleteTournament(tournament_id) {
+  const fd = new FormData();
+  fd.append('action', 'deleteTournament');
+  fd.append('tournament_id', tournament_id);
+  return postFD(fd);
+}
+
 export async function createFullBracket(tournament_id, opts = {}) {
   const fd = new FormData();
   fd.append('action', 'createFullBracket');
   fd.append('tournament_id', tournament_id);
-  if (opts.pairs) fd.append('pairs', JSON.stringify(opts.pairs));  // <—
+  if (opts.pairs) fd.append('pairs', JSON.stringify(opts.pairs)); 
   return postFD(fd);
 }
-
 
 // ===== Players =====
 export async function listPlayers(tournament_id) {

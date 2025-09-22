@@ -1,5 +1,6 @@
 import React from "react";
 import ActiveTournamentsSection from "../components/ActiveTournamentsSection";
+import ActiveExpand from "../components/ActiveExpand";
 
 export default function ActivePage() {
   return (
@@ -9,7 +10,16 @@ export default function ActivePage() {
         <div className="help">Score entry, advancing, and live bracket.</div>
       </div>
 
-      <ActiveTournamentsSection autoLoad pageSize={5} />
+      <ActiveTournamentsSection
+        title="Active Tournaments"
+        status="active"
+        ExpandComponent={ActiveExpand}
+        pageSize={5}
+        autoLoad
+        enableAutoRefresh
+        autoRefreshMs={15000}
+        onFinished={(id) => console.log("Finished:", id)}
+      />
     </div>
   );
 }
