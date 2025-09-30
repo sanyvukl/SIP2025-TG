@@ -49,10 +49,12 @@ export default function ActiveTournamentsSection({
   });
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Fetching tournaments…");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const timerRef = useRef(null);
 
   async function load(p = 1) {
+    setLoadingMessage("Fetching tournaments…");
     setLoading(true);
     try {
       const data = await listTournaments({ status, page: p, limit: pageSize });
@@ -98,7 +100,7 @@ export default function ActiveTournamentsSection({
   }
 
   function handleFinished(tournamentId) {
-    // Optimistic removal from the "active" list
+    setLoadingMessage("Finishing...")
     setItems((prev) => prev.filter((t) => t.id !== tournamentId));
     // (Optional) also refresh the current page from the server:
     // load(page);
@@ -111,7 +113,10 @@ export default function ActiveTournamentsSection({
 
   async function handleDelete(tid) {
     try {
+      setLoadingMessage("Deleting...")
+      setLoading(true);
       await deleteTournament(tid);
+      setLoading(false);
       await load(page); // reload current page to reflect server truth (meta, pagination, etc.)
     } catch (e) {
       console.log("Failed to delete tournament: " + e.message);
@@ -182,7 +187,7 @@ export default function ActiveTournamentsSection({
       </div>
       <EightBallBounceModal
         open={loading}
-        message="Fetching tournaments…"
+        message={loadingMessage}
         size={64}
         speed={1000}
       />
