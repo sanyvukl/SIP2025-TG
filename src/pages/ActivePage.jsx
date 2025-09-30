@@ -13,7 +13,6 @@ export default function ActivePage() {
       <ActiveTournamentsSection
         title="Active Tournaments"
         status="active"
-        ExpandComponent={ActiveExpand}
         pageSize={5}
         autoLoad
         enableAutoRefresh

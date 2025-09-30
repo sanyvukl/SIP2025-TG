@@ -44,7 +44,7 @@ export default function PendingTournamentsSection({
       setMeta(data.meta || { page: p, pages: 1, has_prev:false, has_next:false, total:0 });
       setPage(p);
     } catch (e) {
-      alert("Failed to load pending: " + e.message);
+      console.log("Failed to load pending: " + e.message);
       setItems([]);
       setMeta({ page: 1, pages: 1, has_prev: false, has_next: false, total: 0 });
     } finally {
@@ -82,7 +82,7 @@ export default function PendingTournamentsSection({
       await deleteTournament(tid);
       await load(page); // reload current page to reflect server truth (meta, pagination, etc.)
     } catch (e) {
-      alert("Failed to delete tournament: " + e.message);
+      console.log("Failed to delete tournament: " + e.message);
     }
   }
 

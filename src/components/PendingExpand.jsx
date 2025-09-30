@@ -30,7 +30,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
         if (!mounted) return;
         setPlayers(list);
       } catch (e) {
-        alert("Failed to load players: " + e.message);
+        console.log("Failed to load players: " + e.message);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -140,7 +140,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
       onParticipantsChange?.(tid, newCount);
       setRound1([]);
     } catch (e) {
-      alert("Failed to add player: " + e.message);
+      console.log("Failed to add player: " + e.message);
     } finally {
       setBusy(false);
     }
@@ -157,7 +157,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
       onParticipantsChange?.(tid, newCount);
       setRound1([]);
     } catch (e) {
-      alert("Failed to delete: " + e.message);
+      console.log("Failed to delete: " + e.message);
     } finally {
       setBusy(false);
     }
@@ -201,14 +201,14 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
 
       const data = await createFullBracket(tid, { pairs });   // <— pass to API
 
-      alert(
+      console.log(
         `Created ${data.created} matches · Format: ${String(
           data.format
         ).toUpperCase()}${data.byes ? ` · BYEs: ${data.byes}` : ""} · Ready ✅`
       );
       onBecameActive?.(tid);
     } catch (e) {
-      alert("Failed to start: " + e.message);
+      console.log("Failed to start: " + e.message);
     } finally {
       setBusy(false);
       setStarting(false);
@@ -340,7 +340,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
                     Round 1 · Matches: {round1.length}{round1.some(m => m.bye) ? ` · (${round1.filter(m => m.bye).length} BYE${round1.filter(m => m.bye).length>1?'s':''})` : ''}
                   </div>
                   <div style={{ display:'flex', gap:8 }}>
-                    <button className="btn" onClick={autoFillRandom} disabled={busy} style={ctrlStyle(busy)}>Auto-Fill Random</button>
+                    <button className="btn" onClick={autoFillRandom} disabled={busy} style={ctrlStyle(busy)}>Random Shuffle</button>
                     <button className="btn" onClick={clearEditor}   disabled={busy} style={ctrlStyle(busy)}>Clear</button>
                   </div>
                 </div>

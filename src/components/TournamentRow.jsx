@@ -52,7 +52,7 @@ export default function TournamentRow({
       setDeleting(true);
       await onDelete(t.id); 
     } catch (e) {
-      alert("Failed to delete: " + e.message);
+      console.log("Failed to delete: " + e.message);
     } finally {
       setDeleting(false);
     }

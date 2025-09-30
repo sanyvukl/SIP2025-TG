@@ -34,7 +34,6 @@ export default function PastPage() {
         key={"past-" + reloadKey}
         title="Past Tournaments"
         status="completed"
-        ExpandComponent={PastExpand}
         autoLoad
       />
     </div>

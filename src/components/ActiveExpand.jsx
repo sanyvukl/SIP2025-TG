@@ -33,7 +33,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
         setPlayersById(Object.fromEntries(players.map(p => [String(p.id), p])));
         setMatches(ms);
       } catch (e) {
-        alert("Failed to load active view: " + e.message);
+        console.log("Failed to load active view: " + e.message);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -155,7 +155,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
     try {
       await saveMatchScore(tid, mid, a, b);
     } catch (e) {
-      alert("Save failed: " + e.message);
+      console.log("Save failed: " + e.message);
     } finally {
       // If handleAdvance fetched fresh matches, this patch is harmless; if not, it unlocks UI.
       patchMatch(mid, { __scoreBusy: false });
@@ -171,9 +171,9 @@ export default function ActiveExpand({ tournament, onFinished }) {
       const fresh = await listMatches(tid);
       withGridScrollPreserved(() => setMatches(fresh));
 
-      if (!silent) alert("Advanced.");
+      if (!silent) console.log("Advanced.");
     } catch (e) {
-      alert("Advance failed: " + e.message);
+      console.log("Advance failed: " + e.message);
       withGridScrollPreserved(() => {
         setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: false } : m));
       });
@@ -459,14 +459,14 @@ async function handleFinishTournament() {
       setFinishBusy(true);
       const res = await finishTournament(tournament.id /*, { force:true }*/);
       onFinished(tournament.id);
-      alert("Tournament finished" + (res.winner_id ? ` — Champion: ${res.winner_name}` : ""));
+      console.log("Tournament finished" + (res.winner_id ? ` — Champion: ${res.winner_name}` : ""));
       // Tell parent to refresh active list (or remove this item)
 
       // optional: local UX polish so the button disables immediately
       // (parent should also drop this card from the Active page)
       // You can also navigate away if you have routing.
     } catch (e) {
-      alert("Failed to finish: " + e.message);
+      console.log("Failed to finish: " + e.message);
     } finally {
       setFinishBusy(false);
     }

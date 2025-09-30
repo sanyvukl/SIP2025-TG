@@ -89,13 +89,13 @@ export default function CreateTournamentPage() {
 
       await createPlayers(tournament_id, playersPayload);
 
-      alert(`Tournament created!\nID: ${tournament_id}\nPlayers saved: ${playerCount}`);
+      console.log(`Tournament created!\nID: ${tournament_id}\nPlayers saved: ${playerCount}`);
       
       onReset();
     } catch (e2) {
       console.error(e2);
       setErr(e2.message || "Failed to create tournament");
-      alert("Failed: " + (e2.message || "Unknown error"));
+      console.log("Failed: " + (e2.message || "Unknown error"));
     } finally {
       setSubmitting(false);
     }
