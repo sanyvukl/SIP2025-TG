@@ -6,6 +6,7 @@ import {
   createFullBracket,
   updateTournamentPlayerCount,
 } from "../api/tournaments";
+import { useNavigate } from "react-router-dom";
 
 // small helpers
 const cssEscape = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
@@ -207,6 +208,9 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
         ).toUpperCase()}${data.byes ? ` · BYEs: ${data.byes}` : ""} · Ready ✅`
       );
       onBecameActive?.(tid);
+
+      const navigate = useNavigate();
+      navigate("/active")
     } catch (e) {
       console.log("Failed to start: " + e.message);
     } finally {
