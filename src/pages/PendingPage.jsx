@@ -5,7 +5,6 @@ export default function PendingPage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   const hardReloadOthers = () => setReloadKey((k) => k + 1); 
-  // if you also show Active/Past elsewhere
 
   return (
     <div

@@ -10,6 +10,29 @@ async function postFD(fd) {
   return data;
 }
 
+export async function createTournament({ name, format, player_count, race_to, start_time }) {
+  const fd = new FormData();
+  fd.append("action", "createTournament");
+  fd.append("name", name);
+  fd.append("format", format);
+  fd.append("player_count", String(player_count));
+  fd.append("race_to", String(race_to));
+  fd.append("start_time", start_time);
+
+  let data = await postFD(fd);
+  return data.tournament_id;
+}
+
+export async function createPlayers(tournament_id, players) {
+  const fd = new FormData();
+  fd.append("action", "createPlayers");
+  fd.append("tournament_id", tournament_id);
+  fd.append("players", JSON.stringify(players.map(p => ({ ...p, tournament_id }))));
+
+  await postFD(fd);
+  return true;
+}
+
 // ===== Tournaments =====
 export async function listTournaments({ status, page = 1, limit = 5 }) {
   const fd = new FormData();

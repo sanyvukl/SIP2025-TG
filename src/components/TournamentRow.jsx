@@ -111,7 +111,7 @@ export default function TournamentRow({
             }}
             onClick={() => setExpanded((v) => !v)}
           >
-            {expanded ? "Collapse" : "Expand"}
+            {expanded ? "Collapse" : "View"}
           </button>
         </div>
       </div>

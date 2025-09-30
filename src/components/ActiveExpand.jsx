@@ -5,15 +5,17 @@ import {
   saveMatchScore,        
   advanceMatch,
   finishTournament,
-  getRanking
 } from "../api/tournaments";
 import PaneHeader from "./PaneHeader";
 import Standing from "./Standing";
+import { useNavigate } from "react-router-dom";
+import path from "../utils/paths";
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 export default function ActiveExpand({ tournament, onFinished }) {
+  const navigate = useNavigate();
   const tid = tournament.id;
   const [playersById, setPlayersById] = useState({});
   const [matches, setMatches] = useState([]);
@@ -81,7 +83,6 @@ export default function ActiveExpand({ tournament, onFinished }) {
       .join('|');
   }, [matches]);
 
-
   const grid = useMemo(() => splitMatches(matches), [matches]);
 
   // ---- score utils ----
@@ -90,12 +91,6 @@ export default function ActiveExpand({ tournament, onFinished }) {
     if (!Number.isFinite(n) || n < 0) n = 0;
     if (raceTo > 0 && n > raceTo) n = raceTo;
     return n;
-  };
-  const oneSideWon = (a, b) => {
-    if (raceTo <= 0) return false;
-    const aw = a === raceTo && b < raceTo;
-    const bw = b === raceTo && a < raceTo;
-    return aw ^ bw;
   };
 
   // Single source of truth for win state + score highlights
@@ -140,11 +135,10 @@ export default function ActiveExpand({ tournament, onFinished }) {
   }
 
   function patchMatch(mid, patch) {
-  withGridScrollPreserved(() => {
-    setMatches(prev => prev.map(m => (m.id === mid ? { ...m, ...patch } : m)));
-  });
-}
-
+    withGridScrollPreserved(() => {
+      setMatches(prev => prev.map(m => (m.id === mid ? { ...m, ...patch } : m)));
+    });
+  }
 
   async function updateScores(mid, a, b) {
     a = clamp(a); b = clamp(b);
@@ -167,7 +161,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
       setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: true } : m));
     });
     try {
-      const res = await advanceMatch(tid, mid);
+      await advanceMatch(tid, mid);
       const fresh = await listMatches(tid);
       withGridScrollPreserved(() => setMatches(fresh));
 
@@ -305,7 +299,6 @@ export default function ActiveExpand({ tournament, onFinished }) {
     return ret;
   }
 
-
   function BracketHeaderCell({ children }) {
     const COL_W = 240; // keep in one place so headers & columns line up
     return (
@@ -418,7 +411,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
     );
   }
 
- function FinalsRail({ finals, justify = 'space-around' }) {
+  function FinalsRail({ finals, justify = 'space-around' }) {
   if (!finals?.length) return null;
 
   return (
@@ -451,25 +444,22 @@ export default function ActiveExpand({ tournament, onFinished }) {
   );
   }
 
-async function handleFinishTournament() {
-    if (finishBusy) return;
-    if (!window.confirm("Finish this tournament? This will lock results.")) return;
+  async function handleFinishTournament() {
+      if (finishBusy) return;
+      if (!window.confirm("Finish this tournament? This will lock results.")) return;
 
-    try {
-      setFinishBusy(true);
-      const res = await finishTournament(tournament.id /*, { force:true }*/);
-      onFinished(tournament.id);
-      console.log("Tournament finished" + (res.winner_id ? ` — Champion: ${res.winner_name}` : ""));
-      // Tell parent to refresh active list (or remove this item)
-
-      // optional: local UX polish so the button disables immediately
-      // (parent should also drop this card from the Active page)
-      // You can also navigate away if you have routing.
-    } catch (e) {
-      console.log("Failed to finish: " + e.message);
-    } finally {
-      setFinishBusy(false);
-    }
+      try {
+        setFinishBusy(true);
+        const res = await finishTournament(tournament.id /*, { force:true }*/);
+        onFinished(tournament.id);
+        console.log("Tournament finished" + (res.winner_id ? ` — Champion: ${res.winner_name}` : ""));
+        
+        await navigate(path.PAST_TOURNAMENTS)
+      } catch (e) {
+        console.log("Failed to finish: " + e.message);
+      } finally {
+        setFinishBusy(false);
+      }
   }
 
 
@@ -634,8 +624,5 @@ const bumpStyle = (disabled)=>({
   appearance:'none', border:'none', background: disabled ? '#242831' : '#2a2f37', color:'#cfd6e3',
   width:24, fontWeight:800, cursor: disabled ? 'not-allowed' : 'pointer', borderLeft:'1px solid var(--ring)'
 });
-const winnerSlot = { /* highlight only the score box per your theme; subtle row tint is fine */
-  background:'#3a3f48'
-};
 const mxActions = { display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, padding:6, background:'#1b2027', borderTop:'1px solid var(--ring)' };
 const btnSm     = { padding:'6px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--ring)', background:'#0f1a28', color:'var(--ink)', cursor:'pointer' };

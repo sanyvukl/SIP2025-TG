@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
 import PastExpand from "./PastExpand";
+import { EightBallBounceModal } from "./EightBallBounce";
 
 const card = {
   background: "var(--panel)",
@@ -171,6 +172,12 @@ export default function PastTournamentsSection({
           </button>
         </div>
       </div>
+      <EightBallBounceModal
+        open={loading}
+        message="Fetching tournaments…"
+        size={64}
+        speed={1000}
+      />
     </div>
   );
 }

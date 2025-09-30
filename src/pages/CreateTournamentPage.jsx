@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { createTournament, createPlayers } from "../api/googleAppsScript";
+import { createTournament, createPlayers } from "../api/tournaments";
+import { useNavigate } from "react-router-dom";
+import PoolOrbitLoaderModal from "../components/PoolOrbitLoaderModal";
+import path from "../utils/paths";
 
 function SummaryCard({ name, format, raceTo, playerCount }) {
   const fmtLabel =
@@ -30,6 +33,7 @@ function sanitizeNames(raw) {
 
 export default function CreateTournamentPage() {
   // form state
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [format, setFormat] = useState("single");
   const [start, setStart] = useState("");           // datetime-local value
@@ -92,6 +96,7 @@ export default function CreateTournamentPage() {
       console.log(`Tournament created!\nID: ${tournament_id}\nPlayers saved: ${playerCount}`);
       
       onReset();
+      await navigate(path.PENDING_TOURNAMENTS);
     } catch (e2) {
       console.error(e2);
       setErr(e2.message || "Failed to create tournament");
@@ -116,7 +121,7 @@ export default function CreateTournamentPage() {
           <h2>Bracket Parameters</h2>
           <div id="err" className="error" style={{ display: err ? "block" : "none" }}>{err}</div>
 
-          <form className="form" onSubmit={onSubmit} onReset={onReset}>
+          <form className="form" onSubmit={onSubmit} onReset={onReset} {...(submitting ? { inert: "" } : {})}>
             {/* Name */}
             <div className="field">
               <label htmlFor="tName" className="label">Tournament Name <span className="req">*</span></label>
@@ -210,6 +215,15 @@ Player 4`}
           playerCount={playerCount}
         />
       </div>
+
+      {/* Show the full-screen loader while submitting */}
+      <PoolOrbitLoaderModal
+        open={submitting}
+        message="Creating tournament…"
+        size={180}            // tweak size if you like
+        backdrop="rgba(0,0,0,.55)" // slightly darker
+        // onBackdropClick={() => {}} // leave undefined so users can’t dismiss
+      />
     </div>
   );
 }

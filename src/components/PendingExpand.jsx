@@ -7,6 +7,7 @@ import {
   updateTournamentPlayerCount,
 } from "../api/tournaments";
 import { useNavigate } from "react-router-dom";
+import path from "../utils/paths";
 
 // small helpers
 const cssEscape = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
@@ -15,6 +16,7 @@ const escapeHtml = (s) =>
 
 export default function PendingExpand({ tournament, onBecameActive, onParticipantsChange }) {
   const tid = tournament.id;
+  const navigate = useNavigate();
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addName, setAddName] = useState("");
@@ -209,8 +211,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
       );
       onBecameActive?.(tid);
 
-      const navigate = useNavigate();
-      navigate("/active")
+      await navigate(path.ACTIVE_TOURNAMENTS);
     } catch (e) {
       console.log("Failed to start: " + e.message);
     } finally {

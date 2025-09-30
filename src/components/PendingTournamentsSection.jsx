@@ -2,24 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import PendingExpand from "./PendingExpand";
 import TournamentRow from "./TournamentRow";
+import { EightBallBounceModal } from "./EightBallBounce";
 
 const cardStyle = { background: "var(--panel)", border: "1px solid var(--ring)", borderRadius: 14, padding: 16 };
-const kvStyle = { display:"flex", justifyContent:"space-between", alignItems:"center", background:"#191d24", border:"1px solid var(--ring)", borderRadius:10, padding:10, marginBottom:8 };
 
-function fmtFormat(raw) {
-  const s = String(raw || "").toLowerCase();
-  if (s === "double") return "Double Elimination";
-  if (s === "single") return "Single Elimination";
-  return raw || "—";
-}
-function fmtDate(dt) {
-  if (!dt) return "-";
-  try {
-    return new Date(dt).toLocaleString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-  } catch { return String(dt); }
-}
 
 export default function PendingTournamentsSection({
   pageSize = 5,
@@ -88,49 +74,59 @@ export default function PendingTournamentsSection({
 
   return (
     <div className="card" style={{ ...cardStyle, marginBottom: 20 }}>
-      <div className="card-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 12 }}>
-        <h2 style={{ margin: 0 }}>{title}</h2>
-        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <label style={{ display:'inline-flex', gap:8, alignItems:'center', fontSize:12, color:'var(--muted)'}}>
-            <input
-              type="checkbox"
-              checked={autoRefresh}
-              onChange={e=>setAutoRefresh(e.target.checked)}
-            />
-            Auto-refresh (15s)
-          </label>
-          <button className="btn" onClick={()=>load(1)} disabled={loading}>
-            {loading ? "Refreshing…" : (items.length ? "Refresh" : "Load")}
-          </button>
-        </div>
-      </div>
-
-      <div className="tournament-list">
-        {!items.length && !loading ? (
-          <div className="empty" style={{ fontSize:12, color:'var(--muted)', padding:'6px 0' }}>
-            No tournaments to show.
+      <>
+        <div className="card-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>{title}</h2>
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <label style={{ display:'inline-flex', gap:8, alignItems:'center', fontSize:12, color:'var(--muted)'}}>
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={e=>setAutoRefresh(e.target.checked)}
+              />
+              Auto-refresh (15s)
+            </label>
+            <button className="btn" onClick={()=>load(1)} disabled={loading}>
+              {loading ? "Refreshing…" : (items.length ? "Refresh" : "Load")}
+            </button>
           </div>
-        ) : (
-          items.map(t => (
-            <TournamentRow
-              key={t.id}
-              t={t}
-              onBecameActive={onBecameActive}
-              onParticipantsChange={onParticipantsChange}
-              ExpandComponent={PendingExpand}
-              onDelete={handleDelete}
-            />
-          ))
-        )}
-      </div>
+        </div>
 
-      <div className="pager" style={{ display:'flex', gap:8, alignItems:'center', marginTop:10, flexWrap:'wrap' }}>
-        <button className="btn" disabled={!meta.has_prev || loading} onClick={()=>load(page-1)}>Prev</button>
-        <span className="k" style={{ fontSize:12 }}>
-          Page {meta.page || page} / {meta.pages || 1} &nbsp;·&nbsp; Total: {meta.total ?? 0}
-        </span>
-        <button className="btn" disabled={!meta.has_next || loading} onClick={()=>load(page+1)}>Next</button>
-      </div>
+        <div className="tournament-list">
+          {!items.length && !loading ? (
+            <div className="empty" style={{ fontSize:12, color:'var(--muted)', padding:'6px 0' }}>
+              No tournaments to show.
+            </div>
+          ) : (
+            items.map(t => (
+              <TournamentRow
+                key={t.id}
+                t={t}
+                onBecameActive={onBecameActive}
+                onParticipantsChange={onParticipantsChange}
+                ExpandComponent={PendingExpand}
+                onDelete={handleDelete}
+              />
+            ))
+          )}
+        </div>
+
+        <div className="pager" style={{ display:'flex', gap:8, alignItems:'center', marginTop:10, flexWrap:'wrap' }}>
+          <button className="btn" disabled={!meta.has_prev || loading} onClick={()=>load(page-1)}>Prev</button>
+          <span className="k" style={{ fontSize:12 }}>
+            Page {meta.page || page} / {meta.pages || 1} &nbsp;·&nbsp; Total: {meta.total ?? 0}
+          </span>
+          <button className="btn" disabled={!meta.has_next || loading} onClick={()=>load(page+1)}>Next</button>
+        </div>
+      </>
+      <>
+      <EightBallBounceModal
+        open={loading}
+        message="Fetching tournaments…"
+        size={64}
+        speed={1000}
+      />
+      </>
     </div>
   );
 }

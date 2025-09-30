@@ -1,6 +1,4 @@
-import React from "react";
 import ActiveTournamentsSection from "../components/ActiveTournamentsSection";
-import ActiveExpand from "../components/ActiveExpand";
 
 export default function ActivePage() {
   return (
