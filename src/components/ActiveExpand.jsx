@@ -10,6 +10,7 @@ import PaneHeader from "./PaneHeader";
 import Standing from "./Standing";
 import { useNavigate } from "react-router-dom";
 import path from "../utils/paths";
+import PoolOrbitLoaderModal from "./PoolOrbitLoaderModal";
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -18,8 +19,10 @@ export default function ActiveExpand({ tournament, onFinished }) {
   const navigate = useNavigate();
   const tid = tournament.id;
   const [playersById, setPlayersById] = useState({});
+  const [loadingMessage, setLoadingMessage] = useState("Fetching tournaments…");
   const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [finishBusy, setFinishBusy] = useState(false);
   const [activeTab, setActiveTab] = useState('tournament'); // 'tournament' | 'ranking'
 
@@ -30,6 +33,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
     (async () => {
       try {
         setLoading(true);
+        setLoadingMessage("Loading...");
         const [players, ms] = await Promise.all([listPlayers(tid), listMatches(tid)]);
         if (!mounted) return;
         setPlayersById(Object.fromEntries(players.map(p => [String(p.id), p])));
@@ -147,11 +151,13 @@ export default function ActiveExpand({ tournament, onFinished }) {
     patchMatch(mid, { slot_a_score: a, slot_b_score: b, __scoreBusy: true });
 
     try {
+      setUpdating(true);
+      setLoadingMessage("Updating the score...");
       await saveMatchScore(tid, mid, a, b);
     } catch (e) {
       console.log("Save failed: " + e.message);
     } finally {
-      // If handleAdvance fetched fresh matches, this patch is harmless; if not, it unlocks UI.
+      setUpdating(false);
       patchMatch(mid, { __scoreBusy: false });
     }
   }
@@ -161,6 +167,8 @@ export default function ActiveExpand({ tournament, onFinished }) {
       setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: true } : m));
     });
     try {
+      setUpdating(true);
+      setLoadingMessage("Submitting...");
       await advanceMatch(tid, mid);
       const fresh = await listMatches(tid);
       withGridScrollPreserved(() => setMatches(fresh));
@@ -172,6 +180,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
         setMatches(prev => prev.map(m => m.id === mid ? { ...m, __advBusy: false } : m));
       });
     }
+    setUpdating(false);
   }
 
   function ScoreBox({ m, slot, scoreWin, scoreEnabled }) {
@@ -272,7 +281,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
 
   function Section({ title, children }) {
     return (
-      <div className="section" style={{ marginBottom:18 }}>
+      <div className="section" style={{ marginBottom:18,}}>
         <div className="section-head" style={sectionHead}>{title}</div>
         {/* IMPORTANT: block container, not inline-flex */}
         <div className="section-body">{children}</div>
@@ -447,26 +456,38 @@ export default function ActiveExpand({ tournament, onFinished }) {
   async function handleFinishTournament() {
       if (finishBusy) return;
       if (!window.confirm("Finish this tournament? This will lock results.")) return;
-
+      setLoadingMessage("Finishing the tournament...")
       try {
         setFinishBusy(true);
+        setUpdating(true);
         const res = await finishTournament(tournament.id /*, { force:true }*/);
         onFinished(tournament.id);
         console.log("Tournament finished" + (res.winner_id ? ` — Champion: ${res.winner_name}` : ""));
         
-        await navigate(path.PAST_TOURNAMENTS)
+        await navigate(path.PAST_TOURNAMENTS);
       } catch (e) {
         console.log("Failed to finish: " + e.message);
       } finally {
         setFinishBusy(false);
+        setUpdating(false);
       }
   }
 
 
   return (
     <div className="active-panel" style={panel}>
-      {loading ? (
-        <div className="k">Loading…</div>
+      {/* Active Component is loading */}
+      {(loading) ? (
+        <div className="k" style={{height: "400px", position: "relative"}}>
+            <PoolOrbitLoaderModal
+                                open={loading}
+                                message={loadingMessage}
+                                size={180}            // tweak size if you like
+                                backdrop="rgba(0, 0, 0, 0.2)"  
+                                position="absolute"
+                                lockScroll={false}
+            />
+            </div>
       ) : (
         <div className="active-inner" style={inner}>
           {/* Left rail */}
@@ -505,40 +526,70 @@ export default function ActiveExpand({ tournament, onFinished }) {
             />
 
             <div id={`activeGrid_${tid}`} className="grid-shell" style={gridShell}>
-  {activeTab === 'tournament' ? (
-    <>
-      <Section title="Winners Bracket">
-        {grid.winners.length ? (
-          <div style={{ display: 'flex', gap: 18, alignItems: 'stretch', paddingBottom: 4 }}>
-            <>
-              <BracketFlex rounds={grid.winners} prefix="W" justify="space-around" />
-              {grid.finals.length > 0 && (
-                <FinalsRail finals={grid.finals} justify="space-around" />
+              {activeTab === 'tournament' ? (
+                  <div>
+                    <Section title="Winners Bracket">
+                      {grid.winners.length ? (
+                        <div style={{ display: 'flex', gap: 18, alignItems: 'stretch', paddingBottom: 4 }}>
+                          <>
+                            <BracketFlex rounds={grid.winners} prefix="W" justify="space-around" />
+                            {grid.finals.length > 0 && (
+                              <FinalsRail finals={grid.finals} justify="space-around" />
+                            )}
+                          </>
+                        </div>
+                      ) : (
+                        <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+                      )}
+                      {/* Loader */}
+              {(updating && activeTab === 'tournament') ? (
+                <div
+                    style={{
+                    height: "100%",
+                    width: "100%",
+                    position: "absolute",
+                    zIndex: 10000,
+                    top:"50%",
+                    left: "50%",
+                    transform: "translate(-50%,-50%)",
+                  }}
+                >
+                  <PoolOrbitLoaderModal
+                                    open={updating}
+                                    message={loadingMessage}
+                                    size={180}            // tweak size if you like
+                                    backdrop="rgba(0, 0, 0, 0.2)"  
+                                    position="absolute"
+                                    lockScroll={false}
+                  />
+                </div>):<></>}
+                    </Section>
+
+                    {String(tournament.format).toLowerCase() === "double" && (
+                      <Section title="Losers Bracket">
+                        {grid.losers.length ? (
+                          <BracketFlex rounds={grid.losers} prefix="L" justify="space-around" />
+                        ) : (
+                          <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+                        )}
+                      </Section>
+                    )}
+                  </div>
+              ) : (
+                <div className="">
+                  <Section title="Standings">
+                    <Standing 
+                    tournamentId={tid} 
+                    refreshSignal={rankingRefreshSignal} 
+                    />
+                  </Section>
+                </div>
               )}
-            </>
-          </div>
-        ) : (
-          <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
-        )}
-      </Section>
 
-      {String(tournament.format).toLowerCase() === "double" && (
-        <Section title="Losers Bracket">
-          {grid.losers.length ? (
-            <BracketFlex rounds={grid.losers} prefix="L" justify="space-around" />
-          ) : (
-            <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
-          )}
-        </Section>
-      )}
-    </>
-  ) : (
-    <Section title="Standings">
-      <Standing tournamentId={tid} refreshSignal={rankingRefreshSignal} />
-    </Section>
-  )}
+              
             </div>
-
+            
+            
           </div>
         </div>
       )}
@@ -555,7 +606,8 @@ const inner     = {
   gap:12,
   alignItems:'start',
   /* make the grid itself not spill */
-  overflow:'hidden'
+  overflow:'hidden',
+  position: "relative"
 };
 const leftRail  = { border:'1px solid var(--ring)', borderRadius:10, background:'#151a20', padding:12, display:'grid', gap:12, alignContent:'start' };
 const rightPane = {
@@ -566,7 +618,8 @@ const rightPane = {
   minHeight:340,
   /* THE IMPORTANT BITS */
   minWidth: 0,          // allow the 1fr column to shrink
-  overflow: 'hidden'    // anything wider gets contained here
+  overflow: 'hidden',    // anything wider gets contained here
+  position: "relative",
 };
 const tab       = { width:'100%', textAlign:'left', appearance:'none', border:'1px solid var(--ring)', background:'#0f141a', color:'var(--ink)', padding:'10px 12px', borderRadius:10, cursor:'pointer', fontSize:13 };
 const tabActive = { ...tab, outline:'2px solid var(--focus)', outlineOffset:1, background:'#132032' };

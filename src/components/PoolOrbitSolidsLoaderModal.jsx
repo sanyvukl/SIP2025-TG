@@ -1,7 +1,7 @@
 import React, { useEffect, useId } from "react";
 
 /**
- * PoolOrbitLoaderModal
+ * PoolOrbitSolidsLoaderModal
  * - Fullscreen overlay (modal) with dim backdrop
  * - Absolute-positioned loader, "Loading…" text beneath
  * - Pure SVG animation (no JS timers), unique <defs> IDs via useId
@@ -15,7 +15,7 @@ import React, { useEffect, useId } from "react";
  *  - lockScroll?: boolean (default: true)  // prevents page scrolling while open
  *  - onBackdropClick?: () => void          // optional click-to-close
  */
-export default function PoolOrbitLoaderModal({
+export default function PoolOrbitSolidsLoaderModal({
   open = true,
   message = "Loading…",
   size = 140,
@@ -176,70 +176,6 @@ export default function PoolOrbitLoaderModal({
                     <circle cx="80" cy="80" r="5.4" fill="#fff" />
                     <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
                       fontFamily="system-ui,Segoe UI,Arial" fontSize="8.5" fontWeight="700" fill="#000">7</text>
-                  </g>
-                </g>
-              </g>
-
-              {/* ================= Outer ring: STRIPES (9–15) ================= */}
-              <g>
-                <g>
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="360 80 80"
-                    to="0 80 80"
-                    dur="2.2s"
-                    repeatCount="indefinite"
-                  />
-                  {/* radius = 68; offset angles by half-step to alternate with inner ring */}
-                  <g transform="rotate(25.7143 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#fbbf24" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">9</text>
-                  </g>
-                  <g transform="rotate(77.1429 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#3b82f6" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">10</text>
-                  </g>
-                  <g transform="rotate(128.5715 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#ef4444" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">11</text>
-                  </g>
-                  <g transform="rotate(180 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#8b5cf6" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">12</text>
-                  </g>
-                  <g transform="rotate(231.4286 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#f97316" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">13</text>
-                  </g>
-                  <g transform="rotate(282.8572 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#22c55e" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">14</text>
-                  </g>
-                  <g transform="rotate(334.2858 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
-                    <circle cx="80" cy="80" r="9" fill="#f5f7fb" stroke="rgba(0,0,0,.12)" />
-                    <ellipse cx="80" cy="80" rx="9" ry="5" fill="#7f1d1d" />
-                    <circle cx="80" cy="80" r="4.8" fill="#fff" />
-                    <text x="80" y="80" textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="system-ui,Segoe UI,Arial" fontSize="8" fontWeight="700" fill="#000">15</text>
                   </g>
                 </g>
               </g>

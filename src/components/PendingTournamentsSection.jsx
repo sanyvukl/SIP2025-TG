@@ -83,14 +83,6 @@ export default function PendingTournamentsSection({
         <div className="card-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>{title}</h2>
           <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-            <label style={{ display:'inline-flex', gap:8, alignItems:'center', fontSize:12, color:'var(--muted)'}}>
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={e=>setAutoRefresh(e.target.checked)}
-              />
-              Auto-refresh (15s)
-            </label>
             <button className="btn" onClick={()=>load(1)} disabled={loading}>
               {loading ? "Refreshing…" : (items.length ? "Refresh" : "Load")}
             </button>

@@ -1,6 +1,7 @@
 .expand-panel{
   margin-top:10px; border:1px solid var(--ring);
   background:#191d24; border-radius:12px; padding:12px;
+  min-height: 320px;
 }
 .expand-inner{
   display:grid; grid-template-columns:260px 1fr; gap:12px; align-items:start;

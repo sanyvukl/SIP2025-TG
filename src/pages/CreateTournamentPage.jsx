@@ -39,7 +39,7 @@ export default function CreateTournamentPage() {
   const [start, setStart] = useState("");           // datetime-local value
   const [raceTo, setRaceTo] = useState("");
   const [playersRaw, setPlayersRaw] = useState("");
-
+  const [loadingMessage, setLoadingMessage] = useState("Fetching tournaments…");  
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
 
@@ -82,6 +82,7 @@ export default function CreateTournamentPage() {
     }));
 
     setSubmitting(true);
+    setLoadingMessage("Creating tournament...");
     try {
       const tournament_id = await createTournament({
         name: name.trim(),
@@ -219,7 +220,7 @@ Player 4`}
       {/* Show the full-screen loader while submitting */}
       <PoolOrbitLoaderModal
         open={submitting}
-        message="Creating tournament…"
+        message={loadingMessage}
         size={180}            // tweak size if you like
         backdrop="rgba(0,0,0,.55)" // slightly darker
         // onBackdropClick={() => {}} // leave undefined so users can’t dismiss

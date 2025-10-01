@@ -135,9 +135,7 @@ export async function getRanking(tournament_id) {
   const fd = new FormData();
   fd.append('action', 'getRanking');
   fd.append('tournament_id', tournament_id);
-  const res = await fetch(API_URL, { method: 'POST', body: fd });
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || 'Failed');
+  let data = await postFD(fd);
   return data.standings; // array of ranking rows
 }
 

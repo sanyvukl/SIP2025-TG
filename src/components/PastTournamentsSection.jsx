@@ -122,22 +122,6 @@ export default function PastTournamentsSection({
         <div className="card-header" style={header}>
           <h2 style={{ margin: 0 }}>{title}</h2>
           <div style={tools}>
-            <label
-              style={{
-                display: "inline-flex",
-                gap: 8,
-                alignItems: "center",
-                fontSize: 12,
-                color: "var(--muted)",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-              />
-              Auto-refresh (15s)
-            </label>
             <button className="btn" onClick={() => load(page)} disabled={loading}>
               {loading ? "Refreshing…" : items.length ? "Refresh" : "Load"}
             </button>

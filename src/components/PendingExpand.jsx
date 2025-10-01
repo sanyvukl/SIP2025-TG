@@ -8,6 +8,7 @@ import {
 } from "../api/tournaments";
 import { useNavigate } from "react-router-dom";
 import path from "../utils/paths";
+import PoolOrbitLoaderModal from "./PoolOrbitLoaderModal";
 
 // small helpers
 const cssEscape = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
@@ -19,6 +20,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
   const navigate = useNavigate();
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [addName, setAddName] = useState("");
   const [round1, setRound1] = useState([]); // [{id,a,b,bye}]
   const [busy, setBusy] = useState(false);
@@ -29,6 +31,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     (async () => {
       try {
         setLoading(true);
+        setLoadingMessage("Loading...")
         const list = await listPlayers(tid);
         if (!mounted) return;
         setPlayers(list);
@@ -133,6 +136,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     const name = addName.trim();
     if (!name) return;
     setBusy(true);
+    setLoadingMessage("Adding a player...");
     try {
       // Server will auto-assign seed = current_count + 1
       await createPlayer(tid, { name });
@@ -152,6 +156,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
   async function onDelete(pid) {
     if (!window.confirm("Delete this player?")) return;
     setBusy(true);
+    setLoadingMessage("Deleting the player...");
     try {
       await deletePlayer(pid);
       const list = await listPlayers(tid);
@@ -194,6 +199,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     if (starting) return;
     setStarting(true);
     setBusy(true);
+    setLoadingMessage("Starting a tournament...");
     try {
       // Normalize your local editor state into an API-friendly array
       const pairs = round1.map(m => ({
@@ -237,183 +243,214 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
 
 
   return (
-    <div className="expand-panel" style={{ border: '1px solid var(--ring)', background: '#191d24', borderRadius: 12, padding: 12, marginBottom:12 }}>
+    <div className="expand-panel" style={{ border: '1px solid var(--ring)', background: '#191d24', borderRadius: 12, padding: 12, marginBottom:12, position: "relative", overflow:"hidden" }}>
       {loading ? (
-        <div className="k">Loading…</div>
-      ) : (
-        <div className="expand-inner" style={{
-          display: 'grid', gridTemplateColumns: '260px 1fr', gap: 12, alignItems: 'start'
-        }}>
-          {/* LEFT: Players */}
-          <div className="players-col" style={{ border:'1px solid var(--ring)', borderRadius:10, background:'#151a20', padding:12 }}>
-            <h3 style={{ margin: 0, marginBottom: 8, fontSize: 14, color: '#cfd6e3' }}>Players</h3>
-
-            <div className="players-actions" style={{ display:'flex', gap:8, marginBottom:8, alignItems:'center' }}>
-              <input
-                className="control"
-                type="text"
-                placeholder={busy ? "Loading..." : "Player name"}
-                value={busy ? "" : addName}
-                onChange={(e)=>setAddName(e.target.value)}
-                disabled={busy}
-                style={inputStyle(busy, {
-                  flexBasis: "85%",
-                  minWidth: 0,
-                  height: 40,
-                  color: busy ? "#888" : "inherit"
-                })}
+              <div className="k" style={{height: "400px"}}>
+               <PoolOrbitLoaderModal
+                                open={loading || busy}
+                                message={loadingMessage}
+                                size={180}            // tweak size if you like
+                                backdrop="rgba(0, 0, 0, 0.2)"  
+                                position="absolute"
+                                lockScroll={false}
               />
-
-              <button
-                className="btn"
-                onClick={onAdd}
-                disabled={busy || !addName.trim()}
-                style={ctrlStyle(busy || !addName.trim(), {
-                  flexBasis: "15%",
-                  maxWidth: "15%",
-                  height: 40,
-                  aspectRatio: "1 / 1",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: '#2b3140',
-                  border: '1px solid var(--ring)',
-                  transition: 'background 0.2s',
-                  fontSize: 22,
-                  fontWeight: 800,
-                  lineHeight: 1
-                })}
-                onMouseEnter={(e)=>{ if (!(busy || !addName.trim())) e.currentTarget.style.background = '#ff6a2f'; }}
-                onMouseLeave={(e)=>{ if (!(busy || !addName.trim())) e.currentTarget.style.background = '#2b3140'; }}
-              >
-                +
-              </button>
-            </div>
-
-
-            <div className="player-list" style={{ maxHeight: 360, overflow: 'auto', paddingRight: 6 }}>
-              {players.length === 0 ? (
-                <div className="empty">No players yet.</div>
-              ) : players.map((p) => (
-                <div key={p.id} className="player-item" style={{
-                  display:'flex', alignItems:'center', justifyContent:'space-between',
-                  border:'1px solid var(--ring)', borderRadius:8, padding:8, marginBottom:6, background:'#0f141a', fontSize:13
-                }}>
-                  <span>{p.seed}. {p.name}</span>
-                  <span style={{ display:'flex', gap:6, alignItems:'center' }}>
-                    <button
-                      className="btn sm"
-                      onClick={()=>onDelete(p.id)}
-                      disabled={busy}
-                      style={ctrlStyle(busy, {
-                        background: '#221416',
-                        borderColor:'#4a1f1f'
-                      })}
-                    >
-                    X
-                  </button>
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop:10, display:'flex', justifyContent:'flex-end' }}>
-              <button
-                className="btn"
-                onClick={buildRound1}
-                disabled={busy || players.length < 2}
-                style={ctrlStyle(busy || players.length < 2)}
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-
-          {/* RIGHT: Round 1 Editor / Placeholder */}
-          <div className="bracket-col" style={{
-            border:'1px solid var(--ring)', borderRadius:10, background:'#0f141a', padding:12,
-            maxHeight:'70vh', overflow: 'auto', WebkitOverflowScrolling:'touch'
-          }}>
-            {round1.length === 0 ? (
-              <div className="match-editor-header">
-                <div className="k">No matches yet. Click <strong>Submit</strong> to generate first-round slots.</div>
               </div>
             ) : (
-              <>
-                <div className="match-editor-header" style={{display:'flex', gap:8, alignItems:'center', justifyContent:'space-between', marginBottom:10}}>
-                  <div className="k">
-                    Round 1 · Matches: {round1.length}{round1.some(m => m.bye) ? ` · (${round1.filter(m => m.bye).length} BYE${round1.filter(m => m.bye).length>1?'s':''})` : ''}
+        <div className="expand-inner" style={{
+          display: 'grid', gridTemplateColumns: '260px 1fr', gap: 12, alignItems: 'start', 
+        }}>
+            {/* LEFT: Players */}
+            <div className="players-col" style={{ border:'1px solid var(--ring)', borderRadius:10, background:'#151a20', padding:12 }}>
+              <h3 style={{ margin: 0, marginBottom: 8, fontSize: 14, color: '#cfd6e3' }}>Players</h3>
+
+              <div className="players-actions" style={{ display:'flex', gap:8, marginBottom:8, alignItems:'center' }}>
+                <input
+                  className="control"
+                  type="text"
+                  placeholder={busy ? "Loading..." : "Player name"}
+                  value={busy ? "" : addName}
+                  onChange={(e)=>setAddName(e.target.value)}
+                  disabled={busy}
+                  style={inputStyle(busy, {
+                    flexBasis: "85%",
+                    minWidth: 0,
+                    height: 40,
+                    color: busy ? "#888" : "inherit"
+                  })}
+                />
+
+                <button
+                  className="btn add-player-btn"
+                  onClick={onAdd}
+                  disabled={busy || !addName.trim()}
+                  style={ctrlStyle(busy || !addName.trim(), {
+                    flexBasis: "15%",
+                    maxWidth: "15%",
+                    height: 40,
+                    aspectRatio: "1 / 1",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: '#2b3140',
+                    border: '1px solid var(--ring)',
+                    transition: 'background 0.2s',
+                    fontSize: 22,
+                    fontWeight: 800,
+                    lineHeight: 1
+                  })}
+                  onMouseEnter={(e)=>{ if (!(busy || !addName.trim())) e.currentTarget.style.background = '#ff6a2f'; }}
+                  onMouseLeave={(e)=>{ e.currentTarget.style.background = '#2b3140'; }}
+                >
+                  +
+                </button>
+              </div>
+
+
+              <div className="player-list" style={{ maxHeight: 360, overflow: 'auto', paddingRight: 6 }}>
+                {players.length === 0 ? (
+                  <div className="empty">No players yet.</div>
+                ) : players.map((p) => (
+                  <div key={p.id} className="player-item" style={{
+                    display:'flex', alignItems:'center', justifyContent:'space-between',
+                    border:'1px solid var(--ring)', borderRadius:8, padding:8, marginBottom:6, background:'#0f141a', fontSize:13
+                  }}>
+                    <span>{p.seed}. {p.name}</span>
+                    <span style={{ display:'flex', gap:6, alignItems:'center' }}>
+                      <button
+                        className="btn sm"
+                        onClick={()=>onDelete(p.id)}
+                        disabled={busy}
+                        style={ctrlStyle(busy, {
+                          background: '#221416',
+                          borderColor:'#4a1f1f'
+                        })}
+                      >
+                      X
+                    </button>
+                    </span>
                   </div>
-                  <div style={{ display:'flex', gap:8 }}>
-                    <button className="btn" onClick={autoFillRandom} disabled={busy} style={ctrlStyle(busy)}>Random Shuffle</button>
-                    <button className="btn" onClick={clearEditor}   disabled={busy} style={ctrlStyle(busy)}>Clear</button>
-                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop:10, display:'flex', justifyContent:'flex-end' }}>
+                <button
+                  className="btn"
+                  onClick={buildRound1}
+                  disabled={busy || players.length < 2}
+                  style={ctrlStyle(busy || players.length < 2)}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+
+            {/* RIGHT: Round 1 Editor / Placeholder */}
+            <div className="bracket-col" style={{
+              border:'1px solid var(--ring)', borderRadius:10, background:'#0f141a', padding:12,
+              maxHeight:'70vh', overflow: 'auto', WebkitOverflowScrolling:'touch'
+            }}>
+              {round1.length === 0 ? (
+                <div className="match-editor-header">
+                  <div className="k">No matches yet. Click <strong>Submit</strong> to generate first-round slots.</div>
                 </div>
+              ) : (
+                <>
+                  <div className="match-editor-header" style={{display:'flex', gap:8, alignItems:'center', justifyContent:'space-between', marginBottom:10}}>
+                    <div className="k">
+                      Round 1 · Matches: {round1.length}{round1.some(m => m.bye) ? ` · (${round1.filter(m => m.bye).length} BYE${round1.filter(m => m.bye).length>1?'s':''})` : ''}
+                    </div>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button className="btn" onClick={autoFillRandom} disabled={busy} style={ctrlStyle(busy)}>Random Shuffle</button>
+                      <button className="btn" onClick={clearEditor}   disabled={busy} style={ctrlStyle(busy)}>Clear</button>
+                    </div>
+                  </div>
 
-                <div className="match-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:12, maxHeight:400, overflow:'auto' }}>
-                  {round1.map((m) => (
-                    <div key={m.id} className="match-card" style={{ border:'1px solid var(--ring)', background:'#11161d', borderRadius:10, padding:10 }}>
-                      <h5 style={{ margin:0, marginBottom:8, fontSize:12, color:'#9aa3b2', textTransform:'uppercase', letterSpacing:'.04em' }}>
-                        {m.id}{m.bye ? ' · (BYE)' : ''}
-                      </h5>
-                      <div className="pair" style={{ display:'grid', gap:8 }}>
-                        {/* Slot A */}
-                        <select
-                          className="control"
-                          value={m.a || ""}
-                          onChange={(e)=>setSlot(m.id, 'a', e.target.value)}
-                          disabled={busy}
-                          style={inputStyle(busy)}
-                        >
-                          <option value="">{'— Select —'}</option>
-                          {players.map((p)=>(
-                            <option key={p.id} value={p.id} disabled={(usedIds.has(p.id) && m.a !== p.id)}>
-                              {p.seed}. {p.name}
-                            </option>
-                          ))}
-                        </select>
-
-                        {/* Slot B */}
-                        {m.bye ? (
-                          <select className="control" disabled value="BYE" style={inputStyle(true)}>
-                            <option value="BYE">BYE</option>
-                          </select>
-                        ) : (
+                  <div className="match-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:12, maxHeight:400, overflow:'auto' }}>
+                    {round1.map((m) => (
+                      <div key={m.id} className="match-card" style={{ border:'1px solid var(--ring)', background:'#11161d', borderRadius:10, padding:10 }}>
+                        <h5 style={{ margin:0, marginBottom:8, fontSize:12, color:'#9aa3b2', textTransform:'uppercase', letterSpacing:'.04em' }}>
+                          {m.id}{m.bye ? ' · (BYE)' : ''}
+                        </h5>
+                        <div className="pair" style={{ display:'grid', gap:8 }}>
+                          {/* Slot A */}
                           <select
                             className="control"
-                            value={m.b || ""}
-                            onChange={(e)=>setSlot(m.id, 'b', e.target.value)}
+                            value={m.a || ""}
+                            onChange={(e)=>setSlot(m.id, 'a', e.target.value)}
                             disabled={busy}
                             style={inputStyle(busy)}
                           >
                             <option value="">{'— Select —'}</option>
                             {players.map((p)=>(
-                              <option key={p.id} value={p.id} disabled={(usedIds.has(p.id) && m.b !== p.id)}>
+                              <option key={p.id} value={p.id} disabled={(usedIds.has(p.id) && m.a !== p.id)}>
                                 {p.seed}. {p.name}
                               </option>
                             ))}
                           </select>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
 
-                <div style={{ marginTop:12 }}>
-                  <button
-                    className="btn"
-                    style={ctrlStyle(busy || starting, { width:'100%' })}
-                    onClick={onStartTournamentClick}
-                    disabled={busy || starting}
-                  >
-                    {starting ? "Starting a tournament..." : "Start Tournament"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+                          {/* Slot B */}
+                          {m.bye ? (
+                            <select className="control" disabled value="BYE" style={inputStyle(true)}>
+                              <option value="BYE">BYE</option>
+                            </select>
+                          ) : (
+                            <select
+                              className="control"
+                              value={m.b || ""}
+                              onChange={(e)=>setSlot(m.id, 'b', e.target.value)}
+                              disabled={busy}
+                              style={inputStyle(busy)}
+                            >
+                              <option value="">{'— Select —'}</option>
+                              {players.map((p)=>(
+                                <option key={p.id} value={p.id} disabled={(usedIds.has(p.id) && m.b !== p.id)}>
+                                  {p.seed}. {p.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop:12 }}>
+                    <button
+                      className="btn"
+                      style={ctrlStyle(busy || starting, { width:'100%' })}
+                      onClick={onStartTournamentClick}
+                      disabled={busy || starting}
+                    >
+                      {starting ? "Starting a tournament..." : "Start Tournament"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {/* Loader */}
+            {(loading || busy) ? (
+            <div
+                style={{
+                height: "100%",
+                width: "100%",
+                position: "absolute",
+                zIndex: 10000,
+                top:"50%",
+                left: "50%",
+                transform: "translate(-50%,-50%)",
+              }}
+            >
+              <PoolOrbitLoaderModal
+                                open={loading || busy}
+                                message={loadingMessage}
+                                size={180}            // tweak size if you like
+                                backdrop="rgba(0, 0, 0, 0.2)"  
+                                position="absolute"
+                                lockScroll={false}
+              />
+            </div>):<></>}
+        </div>)}
     </div>
   );
 }

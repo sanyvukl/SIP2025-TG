@@ -1,35 +1,62 @@
 // src/components/Standing.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getRanking } from "../api/tournaments";
+import PoolOrbitLoaderModal from "./PoolOrbitLoaderModal";
+import PoolOrbitSolidsLoaderModal from "./PoolOrbitSolidsLoaderModal";
 
-export default function Standing({ tournamentId, refreshSignal }) {
+
+export default function Standing({ tournamentId, refreshSignal}) {
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
+
+  const updateLoading = (l) => {
+    setLoading(l);
+  }
 
   async function load() {
     try {
       setErr(null);
-      setLoading(true);
+      updateLoading(true)
       const r = await getRanking(tournamentId); // uses your existing POST API
       setRows(Array.isArray(r) ? r : []);
     } catch (e) {
       setErr(e?.message || "Failed to load ranking");
     } finally {
-      setLoading(false);
+      updateLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, [tournamentId]);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setErr(null);
+        updateLoading(true);
+        const r = await getRanking(tournamentId);
+        if (!mounted) return;
+        setRows(Array.isArray(r) ? r : []);
+      } catch (e) {
+        if (!mounted) return;
+        setErr(e?.message || "Failed to load ranking");
+      } finally {
+        if (mounted) updateLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [tournamentId]);
+
+
   useEffect(() => { if (refreshSignal != null) load(); }, [refreshSignal]); // refetch when matches change
 
   const hasRows = rows.length > 0;
-
+  console.log("render " + loading);
+  
   return (
     <div style={wrap}>
       <div style={bar}>
         <div style={{ fontSize: 12, color: "var(--muted)" }}>
-          {hasRows ? `${rows.length} players` : "No data"}
+          {hasRows ? `${rows.length} players` : "Loading players..."}
         </div>
         <button onClick={load} style={btn}>Refresh</button>
       </div>
@@ -97,12 +124,34 @@ export default function Standing({ tournamentId, refreshSignal }) {
           </table>
         </div>
       )}
+
+      {loading ? 
+      <div
+          style={{
+          height: "100%",
+          width: "100%",
+          position: "absolute",
+          zIndex: 10000,
+          top:"50%",
+          left: "50%",
+          transform: "translate(-50%,-50%)",
+        }}
+      >
+        <PoolOrbitSolidsLoaderModal
+            open={loading}
+            message={"Loading..."}
+            size={180}            // tweak size if you like
+            backdrop="rgba(0, 0, 0, 0.2)"  
+            position="absolute"
+            lockScroll={false}
+        />
+      </div> : <></>}
     </div>
   );
 }
 
 /* ---- local styles (match your theme) ---- */
-const wrap = { border:'1px solid var(--ring)', borderRadius:8, background:'#11161d', padding:12 };
+const wrap = { border:'1px solid var(--ring)', borderRadius:8, background:'#11161d', padding:12, position: "relative", minHeight: "300px" };
 const bar  = { display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 };
 const btn  = { padding:'6px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--ring)', background:'#0f1a28', color:'var(--ink)', cursor:'pointer' };
 const tableWrap = { overflow:'auto', border:'1px solid var(--ring)', borderRadius:6 };

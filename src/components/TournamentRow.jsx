@@ -49,6 +49,7 @@ export default function TournamentRow({
     if (!onDelete) return;
     if (!window.confirm(`Delete tournament "${t.name}"?`)) return;
     try {
+      setExpanded(false);
       setDeleting(true);
       await onDelete(t.id); 
     } catch (e) {
