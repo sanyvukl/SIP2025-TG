@@ -17,88 +17,100 @@
     --bad:#ef4444;
     --chip:#151a20;
 
-        /* brand + surfaces */
-    --bg:#121419;
-    --panel:#20242c;
-    --ring:#2b3140;
-    --focus:#3b82f6;
-
-    /* text */
-    --ink:#e9edf4;
-    --muted:#9aa3b2;
-
-    /* states */
-    --ok:#22c55e;
-    --err:#ef4444;
-
-    /* bracket specifics */
-    --slot-bg:#3a3f48;     /* row background */
-    --seed-bg:#4a4f58;     /* brighter than slot */
-    --score-bg:#2d3139;    /* score box */
-    --score-win:#ff6a2f;   /* winner highlight */
+    /* match card theming */
+    --slot:#303640;
+    --slot2:#323741;
+    --seed:#4a4f58;
+    --score:#2d3139;
+    --score-ink:#cfd6e3;
+    --win:#2f4c2a;        /* winner slot bg */
+    --win-score:#3b5e32;  /* winner score box */
+    --gf-top:#3a2a10;     /* grand final gradient */
+    --gf-bot:#1f1608;
   }
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
   .wrap{max-width:1200px;margin:22px auto;padding:0 12px}
-  .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px}
+  .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
   .head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
   .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--ring);background:#101621;color:var(--ink);padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn{appearance:none;border:1px solid var(--ring);background:#101621;color:var(--ink);padding:8px 12px;border-radius:8px;cursor:pointer;transition:.15s ease}
+  .btn:hover{transform:translateY(-1px);background:#0f1722}
+  .btn:active{transform:translateY(0)}
   .btn[disabled]{opacity:.55;cursor:not-allowed}
   .btn.ghost{background:#161b23}
-  .list .row{display:flex;justify-content:space-between;align-items:center;background:#191d24;border:1px solid var(--ring);border-radius:10px;padding:10px 14px;margin-bottom:8px}
-  .row .left{display:flex;align-items:center;gap:24px}
-  .bits{display:flex;gap:16px;flex-wrap:wrap;color:#ccc}
+  .list .row{display:flex;justify-content:space-between;align-items:center;background:#191d24;border:1px solid var(--ring);border-radius:10px;padding:10px 14px;margin-bottom:8px;transition:background .15s,border-color .15s}
+  .list .row:hover{background:#1b212a;border-color:#2f3a50}
+  .row .left{display:flex;align-items:center;gap:16px;min-width:0}
+  .row .left > span:first-child{font-weight:700;font-size:16px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bits{display:flex;gap:16px;flex-wrap:wrap;color:#cbd5e1;font-size:13px}
   .muted{color:var(--muted)}
   .pager{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
   .k{font-size:12px;color:var(--muted)}
   .chip{background:var(--chip);border:1px solid var(--ring);border-radius:999px;padding:2px 8px;font-size:12px}
+
   /* Modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:30}
   .modal{width:min(1100px,95vw);max-height:90vh;background:#0f141a;border:1px solid var(--ring);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-.modal-backdrop.show{display:flex}
-  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--ring);gap:8px}
+  .modal-backdrop.show{display:flex}
+  .modal-h{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,#101722 0,#0f141a 100%)}
   .modal-h .title{font-weight:700}
-  .tabs{display:flex;gap:8px}
+  .tabs{display:flex;gap:8px;margin-left:auto}
   .tab{appearance:none;border:1px solid var(--ring);background:#0f141a;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer}
   .tab.active{outline:2px solid var(--focus);outline-offset:1px;background:#132032}
   .modal-b{padding:12px;overflow:auto}
+
   /* Bracket shell */
   .section{margin-bottom:18px}
   .section-head{display:flex;align-items:center;justify-content:center;font-size:12px;color:#cfd6e3;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px 0}
   .grid-shell{border:1px solid var(--ring);border-radius:8px;background:#11161d;padding:14px;width:100%;overflow:auto;box-sizing:border-box}
   .round-head{font-size:12px;color:#9aa3b2;text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px 0;text-align:center}
-  .br-header{display:flex;gap:18px;align-items:baseline;background:#11161d;position:sticky;top:0;padding-top:2px;padding-bottom:6px}
+  .br-header{display:flex;gap:18px;align-items:baseline;background:#11161d;position:sticky;top:0;padding-top:2px;padding-bottom:6px;z-index:1}
   .br-head-cell{min-width:240px;flex:0 0 auto;text-align:center}
   .br-body{display:flex;gap:18px;align-items:stretch;padding-bottom:4px}
-  .col{display:flex;flex-direction:column;flex:0 0 auto;width:240px; min-height: 100%;}
-  .lane{display:flex;flex-direction:column;justify-content:space-around;gap:16px; height: 100%;}
-  /* Match card */
-  .mx{width:220px;border:1px solid var(--ring);border-radius:4px;overflow:hidden;background:#22262d;display:grid;grid-template-rows:28px 28px auto;}
-  .mx-slot{display:flex;align-items:stretch;justify-content:space-between;background:#3a3f48;font-size:13px,}
-  .mx-slot:first-child{
-    margin-bottom: 1px;
-  }
-  .mx-left{display:flex;align-items:center;flex:1;min-width:0}
-  .mx-seed{background:#4a4f58;color:#cfd6e3;font-size:11px;font-weight:600;min-width:24px;padding:0 4px;text-align:center;display:flex;align-items:center;justify-content:center;height:100%;border-right:1px solid var(--ring)}
-  .mx-name{flex:1;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mx-score{display: flex; justify-content: center; align-items: center; height:100%; width:32px; margin:0; padding:0; border:none; border-left:1px solid var(--ring);
-    text-align:center; font-weight:800; font-size:12px; background:var(--score-bg); color:#bfc6d1; align-self: "center";}
-  .mx-score.winner{ background:var(--score-win); color:#fff }
+  .col{display:flex;flex-direction:column;flex:0 0 auto;width:240px}
+  .lane{display:flex;flex-direction:column;justify-content:space-between;gap:16px;height:100%}
+
+  /* ======== Match card (ported / enhanced) ======== */
+  .mx{width:220px;border:1px solid var(--ring);border-radius:8px;overflow:hidden;background:#22262d;display:grid;grid-template-rows:32px 32px;box-shadow:0 6px 20px rgba(0,0,0,.25);transition:transform .12s ease, box-shadow .12s ease}
+  .mx:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.32)}
+  .mx-slot{display:flex;align-items:stretch;justify-content:space-between;background:var(--slot);font-size:13px;line-height:1}
+  .mx-slot[data-slot="B"]{background:var(--slot2)}
+  .mx-left{display:flex;align-items:center;flex:1;min-width:0;height:100%}
+  .mx-seed{background:var(--seed);color:#d8dee8;font-size:11px;font-weight:700;min-width:26px;padding:0 6px;text-align:center;display:flex;align-items:center;justify-content:center;height:100%;border-right:1px solid var(--ring)}
+  .mx-name{flex:1;height:100%;display:flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mx-score{display:flex;align-items:center;justify-content:center;width:44px;height:100%;font-weight:800;font-size:13px;background:var(--score);color:var(--score-ink);border-left:1px solid var(--ring)}
+  /* winner highlighting */
+  .mx-slot.win{background:var(--win)}
+  .mx-slot.win .mx-score{background:var(--win-score);color:#f2ffe9}
+  /* status row (optional meta) */
   .mx-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px;background:#1b2027;border-top:1px solid var(--ring);font-size:11px}
   .badge{font-size:10px;padding:3px 6px;border-radius:6px;color:#cfd6e3;border:1px solid transparent}
   .badge.pending{background:#2a2f37;border-color:#3a404c}
   .badge.in_progress{background:#112036;border-color:#2a406b}
   .badge.completed{background:#0f2a17;border-color:#214b32}
-  /* Finals card style */
-  .mx.gfinal{background:linear-gradient(180deg,#3a2a10 0%,#1f1608 100%);border-color:#facc15;box-shadow:0 0 14px rgba(250,204,21,.6)}
+
+  /* Grand final special */
+  .mx.gfinal{background:linear-gradient(180deg,var(--gf-top) 0%,var(--gf-bot) 100%);border-color:#facc15;box-shadow:0 0 14px rgba(250,204,21,.55)}
   .mx.gfinal .mx-slot{color:#fff7e0}
-  /* Rankings */
-  table{border-collapse:collapse;width:100%}
-  th,td{border-bottom:1px solid #202632;padding:8px 10px;text-align:left}
-  th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-  .right{float:right}
-  /* Chips inline */
-  .inline-chips{display:flex;gap:8px;flex-wrap:wrap}
+  .gf-rail .br-head-cell{min-width:240px}
+
+  /* Loader helpers */
+  .center{display:flex;align-items:center;justify-content:center}
+  .pad16{padding:16px}
+  .mid{min-height:80px}
+
+  /* YOUR LOADER */
+  .loaderOne{width:60px;aspect-ratio:1;display:flex;animation:l10-0 2s infinite steps(1)}
+  .loaderOne::before,.loaderOne::after{content:"";flex:1;animation:l10-1 1s infinite linear alternate, l10-2 2s infinite steps(1) -.5s}
+  .loaderOne::after{--s:-1,-1}
+  @keyframes l10-0{0%{transform:scaleX(1) rotate(0)}50%{transform:scaleX(-1) rotate(-90deg)}}
+  @keyframes l10-1{0%,5%{transform:scale(var(--s,1)) translate(0) perspective(150px) rotateY(0)}33%{transform:scale(var(--s,1)) translate(-10px) perspective(150px) rotateX(0)}66%{transform:scale(var(--s,1)) translate(-10px) perspective(150px) rotateX(-180deg)}95%,100%{transform:scale(var(--s,1)) translate(0) perspective(150px) rotateX(-180deg)}}
+  @keyframes l10-2{0%{background:#514b82;border-radius:0}50%{background:#25b09b;border-radius:100px 0 0 100px}}
+
+  /* scrollbars (optional) */
+  *::-webkit-scrollbar{height:10px;width:10px}
+  *::-webkit-scrollbar-track{background:#0e131a}
+  *::-webkit-scrollbar-thumb{background:#2a3344;border-radius:8px}
 </style>
 </head>
 <body>
@@ -133,7 +145,7 @@
           <div class="k" id="mSubtitle"></div>
         </div>
         <div class="inline-chips" id="mChips"></div>
-        <div style="margin-left:auto" class="tabs">
+        <div class="tabs">
           <button class="tab active" data-tab="tournament">Tournament</button>
           <button class="tab" data-tab="ranking">Ranking</button>
           <button class="btn ghost" id="closeBtn">Close</button>
@@ -160,7 +172,7 @@
           <div class="section" id="finalsSection" style="display:none">
             <div class="section-head">Grand Final</div>
             <div class="grid-shell">
-              <div class="br-header" id="gHead"></div>
+              <div class="br-header gf-rail" id="gHead"></div>
               <div class="br-body" id="gBody"></div>
             </div>
           </div>
@@ -188,58 +200,65 @@
 
 <script>
 /* -------------------- CONFIG -------------------- */
-const API_BASE = 'https://script.google.com/macros/s/AKfycbwTcXAASeBn7eJjr7dPobxh7Lj5VtXMrClDGFZdgjgzptp8ZoC8_DT4ybmrgcGNkTaBJg/exec'; // <-- replace with your GAS Web App URL
+const API_BASE = 'https://script.google.com/macros/s/AKfycbwTcXAASeBn7eJjr7dPobxh7Lj5VtXMrClDGFZdgjgzptp8ZoC8_DT4ybmrgcGNkTaBJg/exec'; // <-- replace
 const PAGE_SIZE = 5;
 
 /* -------------------- UTIL -------------------- */
 const $ = (q,root=document)=>root.querySelector(q);
 const $$ = (q,root=document)=>Array.from(root.querySelectorAll(q));
-const esc = (s)=>String(s==null?'':s)
-  .replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-const fmtFormat = (raw)=> {
-  const s = String(raw||'').toLowerCase();
-  if (s==='double') return 'Double Elimination';
-  if (s==='single') return 'Single Elimination';
-  return raw || '—';
-};
-const fmtDate = (dt)=> {
-  if (!dt) return '-';
-  try{
-    return new Date(dt).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-  }catch{ return String(dt); }
-};
+const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+const fmtFormat = (raw)=>{ const s=String(raw||'').toLowerCase(); if(s==='double') return 'Double Elimination'; if(s==='single') return 'Single Elimination'; return raw||'—'; };
+const fmtDate = (dt)=>{ if(!dt) return '-'; try{ return new Date(dt).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch{ return String(dt);} };
 const toForm = (obj)=> new URLSearchParams(obj);
+
+/* -------- Name formatter: "F. Lastname" -------- */
+function formatName(fullName){
+  if(!fullName) return '—';
+  const parts = String(fullName).trim().split(/\s+/);
+  if(parts.length===1) return parts[0];
+  const first = parts[0];
+  const last = parts[parts.length-1];
+  return `${first.charAt(0).toUpperCase()}. ${last}`;
+}
+
+/* -------- Winner detector (completed only) -------- */
+function computeWinner(m){
+  const a = Number(m.slot_a_score ?? m.a_score ?? m.score_a ?? 0);
+  const b = Number(m.slot_b_score ?? m.b_score ?? m.score_b ?? 0);
+  const completed = String(m.status||'').toLowerCase()==='completed';
+  const wid = m.winner_id ? String(m.winner_id) : null;
+  const aId = String(m.slot_a_player_id||'');
+  const bId = String(m.slot_b_player_id||'');
+  const finalA = completed && ((wid && wid===aId) || (!wid && a>b));
+  const finalB = completed && ((wid && wid===bId) || (!wid && b>a));
+  return { a, b, finalA, finalB };
+}
+
+/* -------------------- Loader helpers -------------------- */
+function spinner(size=60){
+  const wrap = document.createElement('div');
+  wrap.className = 'center pad16 mid';
+  wrap.innerHTML = `<div class="loaderOne" aria-label="Loading" style="width:${size}px"></div>`;
+  return wrap;
+}
+function showSpinnerIn(el, size=60){ el.innerHTML=''; el.appendChild(spinner(size)); }
 
 /* -------------------- API -------------------- */
 async function apiPost(formObj){
-  const res = await fetch(API_BASE, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
-    body: toForm(formObj)
-  });
+  const res = await fetch(API_BASE, { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body: toForm(formObj) });
   if (!res.ok) throw new Error('Network error '+res.status);
   const json = await res.json();
   if (json && json.ok === false) throw new Error(json.error||'Server error');
   return json;
 }
-async function listTournaments({status='active', page=1, limit=PAGE_SIZE}={}){
-  return apiPost({ action:'listTournaments', status, page, limit });
-}
-async function listPlayers(tournament_id){
-  const j = await apiPost({ action:'listPlayers', tournament_id });
-  return j.players || [];
-}
-async function listMatches(tournament_id){
-  const j = await apiPost({ action:'listMatches', tournament_id });
-  return j.matches || [];
-}
-async function getRanking(tournament_id){
-  return apiPost({ action:'getRanking', tournament_id });
-}
+async function listTournaments({status='active', page=1, limit=PAGE_SIZE}={}){ return apiPost({ action:'listTournaments', status, page, limit }); }
+async function listPlayers(tournament_id){ const j = await apiPost({ action:'listPlayers', tournament_id }); return j.players || []; }
+async function listMatches(tournament_id){ const j = await apiPost({ action:'listMatches', tournament_id }); return j.matches || []; }
+async function getRanking(tournament_id){ return apiPost({ action:'getRanking', tournament_id }); }
 
 /* -------------------- STATE -------------------- */
 let currentPage = 1;
-let meta = { page:1, pages:1, total:0, has_prev:false, has_next:false, race_to:0 };
+let meta = { page:1, pages:1, total:0, has_prev:false, has_next:false };
 let timer = null;
 
 /* -------------------- LIST RENDER -------------------- */
@@ -248,8 +267,7 @@ function renderList(items){
   root.innerHTML = '';
   if (!items.length){
     const div = document.createElement('div');
-    div.className='k';
-    div.style.padding='6px 0';
+    div.className='k pad16';
     div.textContent = 'No active tournaments.';
     root.appendChild(div);
     return;
@@ -262,8 +280,6 @@ function renderList(items){
     const left = document.createElement('div');
     left.className = 'left';
     const name = document.createElement('span');
-    name.style.fontWeight='700';
-    name.style.fontSize='16px';
     name.textContent = t.name || '-';
 
     const bits = document.createElement('div');
@@ -309,6 +325,8 @@ function syncPager(){
 async function load(page=1){
   $('#refreshBtn').disabled = true;
   $('#refreshBtn').textContent = 'Refreshing…';
+  showSpinnerIn($('#list'), 52);
+
   try{
     const data = await listTournaments({ status:'active', page, limit: PAGE_SIZE });
     renderList(data.tournaments||[]);
@@ -317,8 +335,7 @@ async function load(page=1){
     syncPager();
     $('#refreshBtn').textContent = data.tournaments?.length ? 'Refresh' : 'Load';
   }catch(e){
-    console.log('Failed to load active tournaments: ' + e.message);
-    renderList([]);
+    $('#list').innerHTML = `<div class="k pad16" style="color:#fca5a5">Failed to load: ${esc(e.message)}</div>`;
     meta = { page:1,pages:1,total:0,has_prev:false,has_next:false };
     syncPager();
     $('#refreshBtn').textContent = 'Load';
@@ -339,109 +356,7 @@ $('#autoRefreshChk').addEventListener('change', (e)=>{
   }
 });
 
-/* ---------- CURRENT TOURNAMENT REFRESHER (5s, no globals) ---------- */
-const CurrentTournamentRefresher = (() => {
-  let iv = null;
-  let current = null; // { id, format }
-
-  async function refreshNow() {
-    if (!current) return;
-
-    try {
-      const [players, matches] = await Promise.all([
-        listPlayers(current.id),
-        listMatches(current.id),
-      ]);
-
-      const playersById = Object.fromEntries(players.map(p => [String(p.id), p]));
-      const grid = splitMatches(matches);
-
-      // Winners
-      renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-around');
-
-      // Losers (double only)
-      const isDouble = String(current.format || 'single').toLowerCase() === 'double';
-      $('#losersSection').style.display = isDouble ? '' : 'none';
-      if (isDouble) {
-        renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
-      } else {
-        $('#lHead').innerHTML = '';
-        $('#lBody').innerHTML = '';
-      }
-
-      // Finals
-      if (grid.finals.length) {
-        $('#finalsSection').style.display = '';
-        $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">GF</div></div>`;
-        $('#gBody').innerHTML = '';
-        const c = document.createElement('div'); c.className = 'col';
-        const lane = document.createElement('div'); lane.className = 'lane'; lane.style.alignItems = 'center';
-        grid.finals.forEach(m => lane.appendChild(makeMatchCard(m, playersById, true)));
-        c.appendChild(lane); $('#gBody').appendChild(c);
-      } else {
-        $('#finalsSection').style.display = 'none';
-        $('#gHead').innerHTML = '';
-        $('#gBody').innerHTML = '';
-      }
-
-      if ($('#tabRanking').style.display !== 'none') {
-        Ranking.refresh(current.id);
-      }
-
-    } catch (e) {
-      console.log('Tournament refresh failed:', e.message);
-    }
-  }
-
-  return {
-    start(tournament, intervalMs = 50000) {
-      this.stop();
-      current = {
-        id: String(tournament.id),
-        format: String(tournament.format || 'single'),
-      };
-      // first pull immediately, then every intervalMs
-      refreshNow();
-      iv = setInterval(refreshNow, intervalMs);
-    },
-    stop() {
-      if (iv) clearInterval(iv);
-      iv = null;
-      current = null;
-    },
-    refreshNow, // optional: expose for manual punch-in
-  };
-})();
-
-
-/* -------------------- MODAL (VIEW) -------------------- */
-function showModal(){ $('#modal').classList.add('show'); }
-function hideModal(){ 
-  $('#modal').classList.remove('show'); 
-  CurrentTournamentRefresher.stop();
-}
-$('#closeBtn').addEventListener('click', hideModal);
-$('#modal').addEventListener('click', (e)=>{ if (e.target===e.currentTarget) hideModal(); });
-
-/* Tabs */
-$$('.tab').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    $$('.tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    $('#tabTournament').style.display = (tab==='tournament') ? '' : 'none';
-    $('#tabRanking').style.display = (tab==='ranking') ? '' : 'none';
-
-    // Only pull/patch rankings when the tab is shown
-    if (tab === 'ranking') {
-      // detect current tournament id from modal opener context
-      const tid = $('#modal')?.dataset?.tid || null;
-      if (tid) Ranking.refresh(String(tid));
-    }
-  });
-});
-
-/* -------------------- BRACKET RENDER -------------------- */
+/* -------------------- BRACKET HELPERS -------------------- */
 function splitMatches(ms){
   const W={}, L={}, G=[];
   (ms||[]).forEach(m=>{
@@ -451,55 +366,65 @@ function splitMatches(ms){
     else if (br.startsWith('L')) (L[key] ||= []).push(m);
     else (W[key] ||= []).push(m);
   });
-  const byRound = (obj)=>{
-    return Object.keys(obj).sort((a,b)=>Number(a)-Number(b))
-      .map(r=>({ title:r, matches:(obj[r]||[]).sort((a,b)=> String(a.id).localeCompare(String(b.id))) }));
-  };
+  const byRound = (obj)=> Object.keys(obj).sort((a,b)=>Number(a)-Number(b))
+    .map(r=>({ title:r, matches:(obj[r]||[]).sort((a,b)=> String(a.id).localeCompare(String(b.id))) }));
   return { winners: byRound(W), losers: byRound(L), finals: G.sort((a,b)=> String(a.id).localeCompare(String(b.id))) };
 }
 
+/* --------- Match card (HTML) --------- */
 function makeMatchCard(m, playersById, isGF=false){
   const A = playersById[m.slot_a_player_id]||{};
   const B = playersById[m.slot_b_player_id]||{};
   const aSeed = A.seed ?? '–';
   const bSeed = B.seed ?? '–';
+  const { a:aScore, b:bScore, finalA, finalB } = computeWinner(m);
+  const raceTo = $('#modal')?.dataset?.raceTo || '';
 
-  let isAbye = aSeed == '–';
-  let isBbye = bSeed == '–';
-
-  const aScore = (m.slot_a_score===''||m.slot_a_score==null)?0:Number(m.slot_a_score);
-  const bScore = (m.slot_b_score===''||m.slot_b_score==null)?0:Number(m.slot_b_score);
   const wrap = document.createElement('div');
   wrap.className = 'mx' + (isGF?' gfinal':'');
   wrap.setAttribute('data-mid', m.id);
 
-  wrap.innerHTML = `
-    <div class="mx-slot">
-      <div class="mx-left">
-        <div class="mx-seed">${esc(aSeed)}</div>
-        <div class="mx-name" title="${esc(A.name||'—')}">${esc(A.name||'—')}</div>
-      </div>
-      <div class="mx-score ${(meta.race_to == aScore || isBbye) ? "winner" : ""}"><span>${aScore}</span></div>
+  // slot A
+  const sA = document.createElement('div');
+  sA.className = 'mx-slot' + (finalA ? ' win' : '');
+  sA.setAttribute('data-slot','A');
+  sA.innerHTML = `
+    <div class="mx-left">
+      <div class="mx-seed">${esc(aSeed)}</div>
+      <div class="mx-name" title="${esc(A.name||'—')}">${esc(formatName(A.name||'—'))}</div>
     </div>
-    <div class="mx-slot">
-      <div class="mx-left">
-        <div class="mx-seed">${esc(bSeed)}</div>
-        <div class="mx-name" title="${esc(B.name||'—')}">${esc(B.name||'—')}</div>
-      </div>
-      <div class="mx-score ${(meta.race_to == bScore || isAbye) ? "winner" : ""}"><span>${bScore}</span></div>
-    </div>
+    <div class="mx-score" title="${raceTo ? 'Race to '+raceTo : ''}">${aScore}</div>
   `;
+
+  // slot B
+  const sB = document.createElement('div');
+  sB.className = 'mx-slot' + (finalB ? ' win' : '');
+  sB.setAttribute('data-slot','B');
+  sB.innerHTML = `
+    <div class="mx-left">
+      <div class="mx-seed">${esc(bSeed)}</div>
+      <div class="mx-name" title="${esc(B.name||'—')}">${esc(formatName(B.name||'—'))}</div>
+    </div>
+    <div class="mx-score" title="${raceTo ? 'Race to '+raceTo : ''}">${bScore}</div>
+  `;
+
+  wrap.appendChild(sA);
+  wrap.appendChild(sB);
+
+  // optional status meta row (uncomment if you want to show it)
+  // const meta = document.createElement('div');
+  // meta.className = 'mx-actions';
+  // meta.innerHTML = `<span>${esc(m.id)}</span><span class="badge ${esc(String(m.status||'pending'))}">${esc(String(m.status||'pending').replace('_',' '))}</span>`;
+  // wrap.appendChild(meta);
+
   return wrap;
 }
 
-function renderBracketArea(headEl, bodyEl, rounds, playersById, prefix='W', justify='space-around'){
+function renderBracketArea(headEl, bodyEl, rounds, playersById, prefix='W', justify='space-between'){
   headEl.innerHTML = '';
   bodyEl.innerHTML = '';
   if (!rounds.length){
-    const none = document.createElement('div');
-    none.className='k';
-    none.textContent = 'No matches.';
-    bodyEl.appendChild(none);
+    showSpinnerIn(bodyEl, 40);
     return;
   }
   // headers
@@ -515,58 +440,33 @@ function renderBracketArea(headEl, bodyEl, rounds, playersById, prefix='W', just
     c.className='col';
     const lane = document.createElement('div');
     lane.className='lane';
-    lane.style.display = "flex";
-    lane.style.flexDirection = "column";
-    lane.style.height = "100%";
-    lane.style.justifyContent = "space-around";
-    col.matches.forEach(m=>{
-      lane.appendChild(makeMatchCard(m, playersById, false));
-    });
+    lane.style.justifyContent = justify;
+    col.matches.forEach(m=> lane.appendChild(makeMatchCard(m, playersById, false)));
     c.appendChild(lane);
     bodyEl.appendChild(c);
   });
 }
 
-/* ---------- LIVE REFRESH (no window globals) ---------- */
-const LiveRefresh = (() => {
+/* ---------- CURRENT TOURNAMENT REFRESHER (5s) ---------- */
+const CurrentTournamentRefresher = (() => {
   let iv = null;
+  let current = null;
 
-  const getOpenTournament = () => {
-    const modal = $('#modal');
-    if (!modal || !modal.classList.contains('show')) return null;
-    const tid = modal.dataset.tid;
-    if (!tid) return null;
-    return {
-      id: tid,
-      format: modal.dataset.format || 'single',
-      race_to: modal.dataset.raceTo || ''
-    };
-  };
-
-  async function refreshOnce() {
-    // always keep list fresh
-    await load(currentPage).catch(() => {});
-
-    // if modal has an active tournament, refresh its view too
-    const t = getOpenTournament();
-    if (!t) return;
-
+  async function refreshNow() {
+    if (!current) return;
     try {
-      const [players, matches] = await Promise.all([
-        listPlayers(t.id),
-        listMatches(t.id)
-      ]);
+      const [players, matches] = await Promise.all([ listPlayers(current.id), listMatches(current.id) ]);
       const playersById = Object.fromEntries(players.map(p => [String(p.id), p]));
       const grid = splitMatches(matches);
 
       // Winners
-      renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-around');
+      renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-between');
 
       // Losers (double only)
-      const isDouble = String(t.format || 'single').toLowerCase() === 'double';
+      const isDouble = String(current.format || 'single').toLowerCase() === 'double';
       $('#losersSection').style.display = isDouble ? '' : 'none';
       if (isDouble) {
-        renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
+        renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-between');
       } else {
         $('#lHead').innerHTML = '';
         $('#lBody').innerHTML = '';
@@ -575,7 +475,7 @@ const LiveRefresh = (() => {
       // Finals
       if (grid.finals.length) {
         $('#finalsSection').style.display = '';
-        $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">GF</div></div>`;
+        $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">Grand Final</div></div>`;
         $('#gBody').innerHTML = '';
         const c = document.createElement('div'); c.className = 'col';
         const lane = document.createElement('div'); lane.className = 'lane'; lane.style.alignItems = 'center';
@@ -587,45 +487,33 @@ const LiveRefresh = (() => {
         $('#gBody').innerHTML = '';
       }
 
-      // Standings
-      renderRanking(t.id);
+      if ($('#tabRanking').style.display !== 'none') {
+        Ranking.refresh(current.id);
+      }
     } catch (e) {
-      console.log('Live refresh (modal) failed:', e.message);
+      console.log('Tournament refresh failed:', e.message);
     }
   }
 
   return {
-    enable(intervalMs = 50000) {
-      this.disable();
-      // immediate pull
-      refreshOnce();
-      iv = setInterval(refreshOnce, intervalMs);
+    start(tournament, intervalMs = 5000) {
+      this.stop();
+      current = { id: String(tournament.id), format: String(tournament.format || 'single') };
+      refreshNow();
+      iv = setInterval(refreshNow, intervalMs);
     },
-    disable() {
-      if (iv) clearInterval(iv);
-      iv = null;
-    }
+    stop(){ if (iv) clearInterval(iv); iv=null; current=null; },
+    refreshNow,
   };
 })();
 
-
-
-/* -------------------- RANKING RENDER -------------------- */
-function renderRanking(tournament_id){
-  return Ranking.refresh(tournament_id, { force: true });
-}
-/* ---------- RANKING: DIFF & PATCH (only when visible) ---------- */
+/* -------------------- RANKING (unchanged logic) -------------------- */
+function renderRanking(tournament_id){ return Ranking.refresh(tournament_id, { force: true }); }
 const Ranking = (() => {
-  // cache per tournament
   const cache = new Map(); // tid -> { rowsByKey: Map, order: string[] }
-
   const tbody = () => $('#rkBody');
   const isVisible = () => $('#tabRanking') && $('#tabRanking').style.display !== 'none';
-
-  // stable key for a row — prefer player id if present; fallback to name+seed
   const keyOf = (s) => String(s.player_id ?? `${s.name || ''}#${s.seed ?? ''}`);
-
-  // normalized shape used for diffing
   const norm = (s) => ({
     key: keyOf(s),
     rank: Number(s.rank),
@@ -633,7 +521,7 @@ const Ranking = (() => {
     seed: s.seed ?? '',
     wins: Number(s.wins ?? 0),
     losses: Number(s.losses ?? 0),
-    win_pct: Number((s.win_pct ?? 0) * 100), // store as %
+    win_pct: Number((s.win_pct ?? 0) * 100),
     frames_for: Number(s.frames_for ?? 0),
     frames_against: Number(s.frames_against ?? 0),
     frame_diff: Number(s.frame_diff ?? 0),
@@ -642,7 +530,6 @@ const Ranking = (() => {
     last_result_at: s.last_result_at ? new Date(s.last_result_at).toLocaleString() : ''
   });
 
-  // render a single <tr> (used on insert)
   function renderRow(r) {
     const tr = document.createElement('tr');
     tr.dataset.key = r.key;
@@ -662,12 +549,8 @@ const Ranking = (() => {
     return tr;
   }
 
-  // patch existing <tr> cells (only touched fields)
   function patchRow(tr, r) {
-    const set = (sel, val) => {
-      const el = tr.querySelector(sel);
-      if (el && el.textContent !== String(val)) el.textContent = String(val);
-    };
+    const set = (sel, val) => { const el = tr.querySelector(sel); if (el && el.textContent !== String(val)) el.textContent = String(val); };
     set('.cell-rank', r.rank);
     set('.cell-name', r.name);
     set('.cell-seed', r.seed ?? '');
@@ -678,25 +561,16 @@ const Ranking = (() => {
     set('.cell-fa', r.frames_against);
     set('.cell-diff', r.frame_diff);
     set('.cell-elim', r.eliminated ? 'Yes' : 'No');
-
-    // last cell might include " · date"
     const lastText = `${r.last_result}${r.last_result_at ? ' · '+r.last_result_at : ''}`;
     set('.cell-last', lastText);
   }
 
-  // re-order DOM rows to match new order with minimal moves
   function reorderRows(tid, newOrder) {
     const tb = tbody();
     const currentRows = Array.from(tb.querySelectorAll('tr'));
     const indexByKey = new Map(newOrder.map((k,i)=>[k,i]));
-
-    // stable minimal reinsert approach
-    currentRows.sort((a,b)=>{
-      return (indexByKey.get(a.dataset.key) ?? 1e9) - (indexByKey.get(b.dataset.key) ?? 1e9);
-    }).forEach((tr, idx) => {
-      if (tb.children[idx] !== tr) tb.insertBefore(tr, tb.children[idx] || null);
-    });
-
+    currentRows.sort((a,b)=> (indexByKey.get(a.dataset.key) ?? 1e9) - (indexByKey.get(b.dataset.key) ?? 1e9))
+               .forEach((tr, idx) => { if (tb.children[idx] !== tr) tb.insertBefore(tr, tb.children[idx] || null); });
     cache.get(tid).order = newOrder.slice();
   }
 
@@ -706,78 +580,54 @@ const Ranking = (() => {
   }
 
   async function refresh(tid, { force = false } = {}) {
-    // only fetch/repaint if Ranking tab visible, unless forced
     if (!force && !isVisible()) return;
-
     const tb = tbody();
     if (!tb) return;
 
-    // show spinner only if empty (avoid flicker during live updates)
     if (!tb.children.length) {
-      tb.innerHTML = '<tr><td colspan="11" class="k" style="padding:16px">Loading…</td></tr>';
+      tb.innerHTML = '';
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 11; td.appendChild(spinner(40));
+      tr.appendChild(td); tb.appendChild(tr);
     }
 
     try {
       const j = await getRanking(tid);
       const rows = (j.standings || []).map(norm);
 
-      // initial empty state
       if (!rows.length) {
-        tb.innerHTML = '<tr><td colspan="11" class="k" style="padding:16px">No standings yet.</td></tr>';
+        tb.innerHTML = '<tr><td colspan="11" class="k pad16">No standings yet.</td></tr>';
         cache.set(tid, { rowsByKey: new Map(), order: [] });
         return;
       }
 
       const c = ensureCache(tid);
-      const currentKeys = new Set(c.order);
       const newKeys = rows.map(r => r.key);
       const newKeySet = new Set(newKeys);
 
-      // 1) insert/update
-      if (!tb.querySelector('tr') || !currentKeys.size) {
-        // first paint (fast path)
+      if (!tb.querySelector('tr') || !c.order.length || tb.querySelector('.loaderOne')){
         tb.innerHTML = '';
-        rows.forEach(r => {
-          const tr = renderRow(r);
-          tb.appendChild(tr);
-          c.rowsByKey.set(r.key, r);
-        });
+        rows.forEach(r => { const tr = renderRow(r); tb.appendChild(tr); c.rowsByKey.set(r.key, r); });
         c.order = newKeys;
         return;
       }
 
-      // patch pass
       rows.forEach((r, idx) => {
         const existingTr = tb.querySelector(`tr[data-key="${CSS.escape(r.key)}"]`);
         if (existingTr) {
-          // compare with cache; only patch if changed
           const prev = c.rowsByKey.get(r.key);
-          if (!prev ||
-              prev.rank !== r.rank ||
-              prev.name !== r.name ||
-              String(prev.seed) !== String(r.seed) ||
-              prev.wins !== r.wins ||
-              prev.losses !== r.losses ||
-              prev.win_pct !== r.win_pct ||
-              prev.frames_for !== r.frames_for ||
-              prev.frames_against !== r.frames_against ||
-              prev.frame_diff !== r.frame_diff ||
-              prev.eliminated !== r.eliminated ||
-              prev.last_result !== r.last_result ||
-              prev.last_result_at !== r.last_result_at) {
+          if (!prev || JSON.stringify(prev) !== JSON.stringify(r)) {
             patchRow(existingTr, r);
             c.rowsByKey.set(r.key, r);
           }
         } else {
-          // new row
           const tr = renderRow(r);
-          // place at correct index
           tb.insertBefore(tr, tb.children[idx] || null);
           c.rowsByKey.set(r.key, r);
         }
       });
 
-      // 2) remove missing rows
       Array.from(tb.querySelectorAll('tr')).forEach(tr => {
         const k = tr.dataset.key;
         if (k && !newKeySet.has(k)) {
@@ -786,13 +636,11 @@ const Ranking = (() => {
         }
       });
 
-      // 3) order rows
       reorderRows(tid, newKeys);
 
     } catch (err) {
-      // keep current DOM; show a small inline error only if tbody empty
       if (!tbody().children.length) {
-        tbody().innerHTML = `<tr><td colspan="11" class="k" style="padding:16px;color:#fca5a5">Failed: ${esc(err.message || err)}</td></tr>`;
+        tbody().innerHTML = `<tr><td colspan="11" class="k pad16" style="color:#fca5a5">Failed: ${esc(err.message || err)}</td></tr>`;
       }
       console.log('Ranking refresh failed:', err.message);
     }
@@ -801,8 +649,7 @@ const Ranking = (() => {
   return { refresh };
 })();
 
-
-/* -------------------- OPEN MODAL (LOAD DATA) -------------------- */
+/* -------------------- MODAL OPEN -------------------- */
 async function openModal(t){
   // meta header
   $('#mTitle').textContent = t.name || 'Tournament';
@@ -813,25 +660,27 @@ async function openModal(t){
   chips.appendChild(chip(`Players: ${Number(t.player_count)||0}`));
   chips.appendChild(chip(`Status: ${String(t.status||'').toUpperCase()}`));
 
-  // ensure Tournament tab visible by default
+  // tabs default
   $$('.tab').forEach(b=>b.classList.remove('active'));
   $$('.tab')[0].classList.add('active');
   $('#tabTournament').style.display = '';
   $('#tabRanking').style.display = 'none';
 
-  // clear grids
+  // clear grids + placeholders
   $('#wHead').innerHTML = $('#wBody').innerHTML = '';
   $('#lHead').innerHTML = $('#lBody').innerHTML = '';
   $('#gHead').innerHTML = $('#gBody').innerHTML = '';
+  showSpinnerIn($('#wBody'), 48);
+  showSpinnerIn($('#lBody'), 40);
+  showSpinnerIn($('#gBody'), 40);
 
-  showModal();
-
+  // modal context
   const modal = $('#modal');
   modal.dataset.tid = String(t.id);
   modal.dataset.format = String(t.format || 'single');
   modal.dataset.raceTo = String(t.race_to || '');
-  meta.race_to = Number(modal.dataset.raceTo);
 
+  showModal();
   CurrentTournamentRefresher.start(t, 5000);
 
   try{
@@ -839,35 +688,57 @@ async function openModal(t){
     const playersById = Object.fromEntries(players.map(p=>[String(p.id), p]));
     const grid = splitMatches(matches);
 
-    // Winners
-    renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-around');
+    renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-between');
 
-    // Losers (double only)
     const isDouble = String(t.format||'single').toLowerCase()==='double';
     $('#losersSection').style.display = isDouble ? '' : 'none';
     if (isDouble){
-      renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
+      renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-between');
+    } else {
+      $('#lHead').innerHTML = '';
+      $('#lBody').innerHTML = '';
     }
 
-    // Finals
     if (grid.finals.length){
       $('#finalsSection').style.display = '';
-      $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">GF</div></div>`;
+      $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">Grand Final</div></div>`;
+      $('#gBody').innerHTML = '';
       const c = document.createElement('div'); c.className='col';
       const lane = document.createElement('div'); lane.className='lane'; lane.style.alignItems='center';
       grid.finals.forEach(m=> lane.appendChild(makeMatchCard(m, playersById, true)));
       c.appendChild(lane); $('#gBody').appendChild(c);
     } else {
       $('#finalsSection').style.display = 'none';
+      $('#gHead').innerHTML = '';
+      $('#gBody').innerHTML = '';
     }
 
-    // Rankings tab content (lazy-load on open)
+    // prefetch rankings
     renderRanking(t.id);
 
   }catch(e){
     console.log('Failed to load tournament view: ' + e.message);
   }
 }
+
+/* -------------------- MODAL + TABS -------------------- */
+function showModal(){ $('#modal').classList.add('show'); }
+function hideModal(){ $('#modal').classList.remove('show'); CurrentTournamentRefresher.stop(); }
+$('#closeBtn').addEventListener('click', hideModal);
+$('#modal').addEventListener('click', (e)=>{ if (e.target===e.currentTarget) hideModal(); });
+$$('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    $('#tabTournament').style.display = (tab==='tournament') ? '' : 'none';
+    $('#tabRanking').style.display = (tab==='ranking') ? '' : 'none';
+    if (tab === 'ranking') {
+      const tid = $('#modal')?.dataset?.tid || null;
+      if (tid) Ranking.refresh(String(tid), { force:true });
+    }
+  });
+});
 
 /* -------------------- BOOT -------------------- */
 load(1);

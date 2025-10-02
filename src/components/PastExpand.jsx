@@ -125,7 +125,7 @@ export default function PastExpand({ tournament }) {
       </div>
     );
   }
-    function formatName(fullName) {
+  function formatName(fullName) {
     if (!fullName) return "";
 
     const parts = fullName.trim().split(/\s+/); // split by spaces
@@ -133,8 +133,8 @@ export default function PastExpand({ tournament }) {
       return parts[0]; // single name only
     }
 
-    const lastName = parts[parts.length - 1];
     const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
     const firstInitial = firstName.charAt(0).toUpperCase();
 
     return `${firstInitial}. ${lastName}`;
