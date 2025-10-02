@@ -66,7 +66,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
 
       for (let i = 0; i < byeCount; i++, idx++) {
         cards.push({
-          id: `R1M${idx + 1}`,
+          id: `W1M${idx + 1}`,
           a: byeSeeds[i],
           b: "BYE",
           bye: true,
@@ -75,7 +75,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
 
       for (let i = 0; i < rest.length; i += 2, idx++) {
         cards.push({
-          id: `R1M${idx + 1}`,
+          id: `W1M${idx + 1}`,
           a: rest[i] ?? null,
           b: rest[i + 1] ?? null,
           bye: false,
@@ -88,7 +88,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
 
     // Fallback/random: empty slots; you can click "Auto-Fill Random" after
     const base = Array.from({ length: matches }, (_, i) => ({
-      id: `R1M${i + 1}`,
+      id: `W1M${i + 1}`,
       a: null,
       b: null,
       bye: false,
@@ -203,6 +203,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     try {
       // Normalize your local editor state into an API-friendly array
       const pairs = round1.map(m => ({
+        id: m.id,
         a: m.a || null,                           // player id or null
         b: m.b === "BYE" ? null : (m.b || null),  // BYE -> null on server
         bye: !!m.bye

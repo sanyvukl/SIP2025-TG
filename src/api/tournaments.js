@@ -1,5 +1,5 @@
 // Minimal API client mirroring your FormData calls
-const API_URL = 'https://script.google.com/macros/s/AKfycbwTcXAASeBn7eJjr7dPobxh7Lj5VtXMrClDGFZdgjgzptp8ZoC8_DT4ybmrgcGNkTaBJg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwweEbFWCi2HIdltkt9qIQYKupg6QOWEvJ4CXNUYZJZQWCscdW4G10ZnYl-y9xV27yvkQ/exec';
 
 async function postFD(fd) {
   const res = await fetch(API_URL, { method: 'POST', body: fd });

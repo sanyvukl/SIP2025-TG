@@ -32,7 +32,7 @@ export default function Header() {
             letterSpacing: "0.5px",
           }}
         >
-          Tournament App
+          LOCK-IN
         </h1>
 
         {/* Navigation */}

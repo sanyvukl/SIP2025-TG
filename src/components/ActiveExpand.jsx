@@ -59,24 +59,70 @@ export default function ActiveExpand({ tournament, onFinished }) {
   const canFinish = completion.allCompleted && !tournamentCompleted;
   
   // ---- render helpers ----
+  // --- helpers to parse match ids like W1M7, R1M3, L4M2, G1 ---
+  function parseMatchId(raw) {
+    const s = String(raw || '').toUpperCase().trim();
+
+    // Normalize R1M# → W1M# just for ordering consistency
+    const r1 = s.match(/^R(\d+)M(\d+)$/);
+    if (r1) return { bracket: 'W', round: Number(r1[1]), match: Number(r1[2]) };
+
+    const w = s.match(/^W(\d+)M(\d+)$/);
+    if (w) return { bracket: 'W', round: Number(w[1]), match: Number(w[2]) };
+
+    const l = s.match(/^L(\d+)M(\d+)$/);
+    if (l) return { bracket: 'L', round: Number(l[1]), match: Number(l[2]) };
+
+    // Finals: support G1 or GF1 styles
+    const g = s.match(/^G(?:F)?(\d+)$/);
+    if (g) return { bracket: 'G', round: Number(g[1]), match: 1 };
+
+    // Fallback if id unexpected
+    return { bracket: String(s[0] || 'W'), round: Number.isFinite(Number(s.slice(1))) ? Number(s.slice(1)) : 1, match: 1 };
+  }
+
+  function byIdNatural(a, b) {
+    const A = parseMatchId(a.id);
+    const B = parseMatchId(b.id);
+    // They’re already grouped by bracket+round; compare by match number first,
+    // then id as a stable tiebreaker.
+    if (A.match !== B.match) return A.match - B.match;
+    return String(a.id).localeCompare(String(b.id));
+  }
+
   function splitMatches(ms) {
     const W = {}, L = {}, G = [];
     (ms || []).forEach(m => {
-      const br = String(m.bracket || "W").toUpperCase();
-      const key = String(m.round || 1);
-      if (br === "G") G.push(m);
-      else if (br.startsWith("L")) (L[key] ||= []).push(m);
-      else (W[key] ||= []).push(m);
-    });
+        const br = String(m.bracket || 'W').toUpperCase();
+        const key = String(m.round || 1);
+
+        if (br === 'G') {
+          G.push(m);
+        } else if (br === 'L') {
+          (L[key] ||= []).push(m);
+        } else {
+          (W[key] ||= []).push(m);
+        }
+      });
+
     const byRound = (obj) =>
       Object.keys(obj)
-        .sort((a,b)=>Number(a)-Number(b))
-        .map(r => ({ title: r, matches: (obj[r]||[]).sort((a,b)=>String(a.id).localeCompare(String(b.id))) }));
+        .sort((a, b) => Number(a) - Number(b))               // round 1,2,3...
+        .map(r => ({
+          title: r,
+          matches: (obj[r] || []).slice().sort(byIdNatural)  // W1M1, W1M2, W1M3...
+        }));
 
     return {
       winners: byRound(W),
       losers: byRound(L),
-      finals: G.sort((a,b)=>String(a.id).localeCompare(String(b.id)))
+      finals: G.slice().sort((a, b) => {
+        // finals: prefer numeric round, then id
+        const A = parseMatchId(a.id);
+        const B = parseMatchId(b.id);
+        if (A.round !== B.round) return A.round - B.round;
+        return String(a.id).localeCompare(String(b.id));
+      }),
     };
   }
 
@@ -147,6 +193,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
       setUpdating(true);
       setLoadingMessage("Updating the score...");
       await saveMatchScore(tid, mid, a, b);
+      console.log(`Score updated ${a}:${b}` );
     } catch (e) {
       console.log("Save failed: " + e.message);
     } finally {
@@ -208,7 +255,20 @@ export default function ActiveExpand({ tournament, onFinished }) {
       </div>
     );
   }
+  function formatName(fullName) {
+    if (!fullName) return "";
 
+    const parts = fullName.trim().split(/\s+/); // split by spaces
+    if (parts.length === 1) {
+      return parts[0]; // single name only
+    }
+
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    const firstInitial = firstName.charAt(0).toUpperCase();
+
+    return `${firstInitial}. ${lastName}`;
+  }
   function MatchCard({ m, isGrandFinal = false }) {
     const A = playersById[m.slot_a_player_id] || {};
     const B = playersById[m.slot_b_player_id] || {};
@@ -226,7 +286,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
         <div className="mx-slot" data-slot="A" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{aSeed}</div>
-            <div className="mx-name" style={mxName}>{escapeHtml(A.name || "—")}</div>
+            <div className="mx-name" style={mxName}>{formatName(escapeHtml(A.name || "—"))}</div>
           </div>
           <ScoreBox m={m} slot="A" scoreWin={wins.aScoreWin} scoreEnabled={ui.scoreEnabled} />
         </div>
@@ -235,7 +295,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
         <div className="mx-slot" data-slot="B" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{bSeed}</div>
-            <div className="mx-name" style={mxName}>{escapeHtml(B.name || "—")}</div>
+            <div className="mx-name" style={mxName}>{formatName(escapeHtml(B.name || "—"))}</div>
           </div>
           <ScoreBox m={m} slot="B" scoreWin={wins.bScoreWin} scoreEnabled={ui.scoreEnabled} />
         </div>

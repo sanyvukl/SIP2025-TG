@@ -125,6 +125,20 @@ export default function PastExpand({ tournament }) {
       </div>
     );
   }
+    function formatName(fullName) {
+    if (!fullName) return "";
+
+    const parts = fullName.trim().split(/\s+/); // split by spaces
+    if (parts.length === 1) {
+      return parts[0]; // single name only
+    }
+
+    const lastName = parts[parts.length - 1];
+    const firstName = parts[0];
+    const firstInitial = firstName.charAt(0).toUpperCase();
+
+    return `${firstInitial}. ${lastName}`;
+  }
 
   function MatchCardPast({ m, isGrandFinal = false }) {
     const A = playersById[m.slot_a_player_id] || {};
@@ -140,7 +154,7 @@ export default function PastExpand({ tournament }) {
         <div className="mx-slot" data-slot="A" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{aSeed}</div>
-            <div className="mx-name" style={mxName}>{escapeHtml(A.name || "—")}</div>
+            <div className="mx-name" style={mxName}>{formatName(escapeHtml(A.name || "—"))}</div>
           </div>
           <div
             className="mx-score"
@@ -158,7 +172,7 @@ export default function PastExpand({ tournament }) {
         <div className="mx-slot" data-slot="B" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{bSeed}</div>
-            <div className="mx-name" style={mxName}>{escapeHtml(B.name || "—")}</div>
+            <div className="mx-name" style={mxName}>{formatName(escapeHtml(B.name || "—"))}</div>
           </div>
           <div
             className="mx-score"
