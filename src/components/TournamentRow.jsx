@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const kvStyle = {
   display: "flex",
@@ -41,9 +41,20 @@ export default function TournamentRow({
   onParticipantsChange,
   onFinished,
   onDelete,
+  shouldClose = false,
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(()=>{
+    const kind = typeof shouldClose;
+
+    // CASE 1: boolean — close when true
+    if (kind === "boolean") {
+      if (shouldClose) setExpanded(false);
+      return;
+    }
+  }, [shouldClose])
 
   async function handleDelete() {
     if (!onDelete) return;

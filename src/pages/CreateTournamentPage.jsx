@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { createTournament, createPlayers } from "../api/tournaments";
 import { useNavigate } from "react-router-dom";
-import PoolOrbitLoaderModal from "../components/PoolOrbitLoaderModal";
+import PoolOrbitLoader from "../components/Loaders/PoolOrbitLoader";
 import path from "../utils/paths";
 
 function SummaryCard({ name, format, raceTo, playerCount }) {
@@ -39,7 +39,7 @@ export default function CreateTournamentPage() {
   const [start, setStart] = useState("");           // datetime-local value
   const [raceTo, setRaceTo] = useState("");
   const [playersRaw, setPlayersRaw] = useState("");
-  const [loadingMessage, setLoadingMessage] = useState("Fetching tournaments…");  
+  const [loadingMessage, setLoadingMessage] = useState("");  
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState("");
 
@@ -59,7 +59,6 @@ export default function CreateTournamentPage() {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
-
     const raceNum = parseInt(raceTo, 10);
     if (!name.trim()) return setErr("Tournament Name required.");
     if (!format) return setErr("Format required.");
@@ -116,13 +115,13 @@ export default function CreateTournamentPage() {
         </div>
       </div>
 
-      <div className="grid">
+      <div className="grid" style={{position:"relative", overflow: "hidden"}}>
         {/* Left: Form */}
         <div className="card">
           <h2>Bracket Parameters</h2>
           <div id="err" className="error" style={{ display: err ? "block" : "none" }}>{err}</div>
 
-          <form className="form" onSubmit={onSubmit} onReset={onReset} {...(submitting ? { inert: "" } : {})}>
+          <form className="form" onSubmit={onSubmit} onReset={onReset} {...(submitting ? { inert: true } : {})}>
             {/* Name */}
             <div className="field">
               <label htmlFor="tName" className="label">Tournament Name <span className="req">*</span></label>
@@ -215,16 +214,17 @@ Player 4`}
           raceTo={raceTo}
           playerCount={playerCount}
         />
+        {/* Show the full-screen loader while submitting */}
+        <PoolOrbitLoader
+          open={submitting}
+          message={loadingMessage}
+          size={180}            // tweak size if you like
+          backdrop="rgba(0,0,0,.15)" // slightly darker
+          lockScroll={false}
+        />
       </div>
 
-      {/* Show the full-screen loader while submitting */}
-      <PoolOrbitLoaderModal
-        open={submitting}
-        message={loadingMessage}
-        size={180}            // tweak size if you like
-        backdrop="rgba(0,0,0,.55)" // slightly darker
-        // onBackdropClick={() => {}} // leave undefined so users can’t dismiss
-      />
+      
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
 } from "../api/tournaments";
 import { useNavigate } from "react-router-dom";
 import path from "../utils/paths";
-import PoolOrbitLoaderModal from "./PoolOrbitLoaderModal";
+import PoolOrbitLoader from "./Loaders/PoolOrbitLoader";
 
 // small helpers
 const cssEscape = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
@@ -246,7 +246,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     <div className="expand-panel" style={{ border: '1px solid var(--ring)', background: '#191d24', borderRadius: 12, padding: 12, marginBottom:12, position: "relative", overflow:"hidden" }}>
       {loading ? (
               <div className="k" style={{height: "400px"}}>
-               <PoolOrbitLoaderModal
+               <PoolOrbitLoader
                                 open={loading || busy}
                                 message={loadingMessage}
                                 size={180}            // tweak size if you like
@@ -441,7 +441,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
                 transform: "translate(-50%,-50%)",
               }}
             >
-              <PoolOrbitLoaderModal
+              <PoolOrbitLoader
                                 open={loading || busy}
                                 message={loadingMessage}
                                 size={180}            // tweak size if you like

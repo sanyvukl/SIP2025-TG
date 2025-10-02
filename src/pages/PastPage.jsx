@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import PastTournamentsSection from "../components/PastTournamentsSection";
-import PastExpand from "../components/PastExpand";
 
 export default function PastPage() {
   const [reloadKey, setReloadKey] = useState(0);
@@ -29,7 +28,6 @@ export default function PastPage() {
           Final brackets, champions, and archives.
         </div>
       </div>
-
       <PastTournamentsSection
         key={"past-" + reloadKey}
         title="Past Tournaments"

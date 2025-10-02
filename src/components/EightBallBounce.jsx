@@ -1,4 +1,5 @@
 import React, { useEffect, useId } from "react";
+import LoaderWrapper from "./Loaders/LoaderWrapper/LoaderWrapper";
 
 /**
  * EightBallBounce
@@ -67,7 +68,7 @@ export function EightBallBounce({ size = 52, speed = 1000, style, className }) {
             right: floorInset,
             bottom: floorBottom,
             height: 2,
-            background: "#1c2330",
+            background: "#eee",
             borderRadius: 1,
             }}
         />
@@ -219,3 +220,32 @@ export function EightBallBounceModal({
 }
 
 export default EightBallBounce;
+
+export function EightBallBounceLoader({
+  open = true,
+  message = "Loading…",
+  size = 52,
+  speed = 1000,
+  backdrop = "rgba(0,0,0,.45)",
+  zIndex = 9999,
+  lockScroll = true,
+  closable = false,
+  onClose,
+  onBackdropClick,
+}) {
+  return (
+    <LoaderWrapper
+      open={open}
+      message={message}
+      size={size}
+      backdrop={backdrop}
+      zIndex={zIndex}
+      lockScroll={lockScroll}
+      closable={closable}
+      onClose={onClose}
+      onBackdropClick={onBackdropClick}
+    >
+      <EightBallBounce size={size} speed={speed} />
+    </LoaderWrapper>
+  );
+}

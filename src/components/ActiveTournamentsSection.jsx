@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
 import ActiveExpand from "./ActiveExpand";
-import { EightBallBounceModal } from "./EightBallBounce";
+import { EightBallBounceLoader } from "./EightBallBounce";
 
 const card = {
   background: "var(--panel)",
@@ -28,9 +28,6 @@ const tools = {
 
 /**
  * Dedicated section optimized for live/active tournaments:
- * - max width 1200 and centered
- * - one-click reload
- * - optional auto-refresh (off by default)
  * - fixed page size tuned for active lists
  */
 export default function ActiveTournamentsSection({
@@ -120,12 +117,13 @@ export default function ActiveTournamentsSection({
       setLoadingMessage("Deleting...")
       setLoading(true);
       await deleteTournament(tid);
-      setLoading(false);
       await load(page); // reload current page to reflect server truth (meta, pagination, etc.)
     } catch (e) {
       console.log("Failed to delete tournament: " + e.message);
     }
+    setLoading(false);
   }
+
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto 20px" }}>
@@ -153,6 +151,7 @@ export default function ActiveTournamentsSection({
                 onParticipantsChange={onParticipantsChange}
                 onFinished={handleFinished}
                 onDelete={handleDelete}
+                shouldClose={loading}
               />
             ))
           )}
@@ -173,11 +172,12 @@ export default function ActiveTournamentsSection({
           </button>
         </div>
       </div>
-      <EightBallBounceModal
+      <EightBallBounceLoader
         open={loading}
         message={loadingMessage}
         size={64}
         speed={1000}
+        closable
       />
     </div>
   );

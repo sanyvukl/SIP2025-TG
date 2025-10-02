@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import PendingExpand from "./PendingExpand";
 import TournamentRow from "./TournamentRow";
-import { EightBallBounceModal } from "./EightBallBounce";
+import { EightBallBounceLoader } from "./EightBallBounce";
 
 const cardStyle = { background: "var(--panel)", border: "1px solid var(--ring)", borderRadius: 14, padding: 16 };
 
@@ -103,6 +103,7 @@ export default function PendingTournamentsSection({
                 onParticipantsChange={onParticipantsChange}
                 ExpandComponent={PendingExpand}
                 onDelete={handleDelete}
+                shouldClose={loading}
               />
             ))
           )}
@@ -117,12 +118,13 @@ export default function PendingTournamentsSection({
         </div>
       </>
       <>
-      <EightBallBounceModal
-        open={loading}
-        message={loadingMessage}
-        size={64}
-        speed={1000}
-      />
+      <EightBallBounceLoader
+          open={loading}
+          message={loadingMessage}
+          size={64}
+          speed={1000}
+          closable
+        />
       </>
     </div>
   );

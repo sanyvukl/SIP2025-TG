@@ -2,9 +2,7 @@
   margin-top:10px; border:1px solid var(--ring); background:#191d24;
   border-radius:12px; padding:12px;
 }
-.active-inner{
-  display:grid; grid-template-columns:260px 1fr; gap:12px; align-items:start;
-}
+
 .left-rail{
   border:1px solid var(--ring); border-radius:10px; background:#151a20; padding:12px;
   display:grid; gap:12px; align-content:start;

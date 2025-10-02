@@ -10,7 +10,7 @@ import PaneHeader from "./PaneHeader";
 import Standing from "./Standing";
 import { useNavigate } from "react-router-dom";
 import path from "../utils/paths";
-import PoolOrbitLoaderModal from "./PoolOrbitLoaderModal";
+import PoolOrbitSolidsLoader from "./Loaders/PoolOrbitSolidsLoader";
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -79,13 +79,6 @@ export default function ActiveExpand({ tournament, onFinished }) {
       finals: G.sort((a,b)=>String(a.id).localeCompare(String(b.id)))
     };
   }
-
-  // change when any match status/completion timestamp changes
-  const rankingRefreshSignal = useMemo(() => {
-    return (matches || [])
-      .map(m => `${m.id}:${m.status}:${m.updated_at || ''}:${m.completed_at || ''}`)
-      .join('|');
-  }, [matches]);
 
   const grid = useMemo(() => splitMatches(matches), [matches]);
 
@@ -456,7 +449,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
   async function handleFinishTournament() {
       if (finishBusy) return;
       if (!window.confirm("Finish this tournament? This will lock results.")) return;
-      setLoadingMessage("Finishing the tournament...")
+      setLoadingMessage("Finishing the tournament...");
       try {
         setFinishBusy(true);
         setUpdating(true);
@@ -479,7 +472,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
       {/* Active Component is loading */}
       {(loading) ? (
         <div className="k" style={{height: "400px", position: "relative"}}>
-            <PoolOrbitLoaderModal
+            <PoolOrbitSolidsLoader
                                 open={loading}
                                 message={loadingMessage}
                                 size={180}            // tweak size if you like
@@ -489,34 +482,33 @@ export default function ActiveExpand({ tournament, onFinished }) {
             />
             </div>
       ) : (
-        <div className="active-inner" style={inner}>
-          {/* Left rail */}
-          <div className="left-rail" style={leftRail}>
-            <div className="tabs-vertical" style={{ display:'grid', gap:8 }}>
+         <div className="active-inner" style={inner}>
+          {/* Row 1: Tabs */}
+          <div className="top-bar" style={topBar}>
+            <div style={{ display:'flex', gap:8 }}>
               <button
                 className={`tab ${activeTab === 'tournament' ? 'active' : ''}`}
-                style={activeTab === 'tournament' ? tabActive : tab}
+                style={activeTab === 'tournament' ? tabActiveTop : tabTop}
                 onClick={() => setActiveTab('tournament')}
               >
                 Tournament
               </button>
-
               <button
                 className={`tab ${activeTab === 'ranking' ? 'active' : ''}`}
-                style={activeTab === 'ranking' ? tabActive : tab}
+                style={activeTab === 'ranking' ? tabActiveTop : tabTop}
                 onClick={() => setActiveTab('ranking')}
               >
                 Ranking
               </button>
             </div>
 
-            <label className="toggle" style={{ display:'inline-flex', gap:8, alignItems:'center', fontSize:12, color:'var(--muted)'}}>
-              <span>Race to: <strong>{raceTo || "—"}</strong></span>
-            </label>
+            <div style={{ marginLeft:'auto', display:'inline-flex', gap:12, alignItems:'center', fontSize:12, color:'var(--muted)', border: "1px solid var(--ring)", background: "rgb(15, 20, 26)", padding: "8px 12px", borderRadius: "8px", fontSize: "13px"}}>
+              <span>Race to: <strong style={{ color:'var(--ink)' }}>{raceTo || "—"}</strong></span>
+            </div>
           </div>
 
-          {/* Right pane */}
-          <div className="right-pane" style={rightPane}>
+          {/* Row 2: Content (header + grid or ranking) */}
+          <div className="content-pane" style={contentPane}>
             <PaneHeader
               title={activeTab === 'ranking' ? 'Ranking' : 'Tournament'}
               onFinish={handleFinishTournament}
@@ -527,102 +519,71 @@ export default function ActiveExpand({ tournament, onFinished }) {
 
             <div id={`activeGrid_${tid}`} className="grid-shell" style={gridShell}>
               {activeTab === 'tournament' ? (
-                  <div>
-                    <Section title="Winners Bracket">
-                      {grid.winners.length ? (
-                        <div style={{ display: 'flex', gap: 18, alignItems: 'stretch', paddingBottom: 4 }}>
-                          <>
-                            <BracketFlex rounds={grid.winners} prefix="W" justify="space-around" />
-                            {grid.finals.length > 0 && (
-                              <FinalsRail finals={grid.finals} justify="space-around" />
-                            )}
-                          </>
-                        </div>
+                <div>
+                  <Section title="Winners Bracket">
+                    {grid.winners.length ? (
+                      <div style={{ display: 'flex', gap: 18, alignItems: 'stretch', paddingBottom: 4 }}>
+                        <>
+                          <BracketFlex rounds={grid.winners} prefix="W" justify="space-around" />
+                          {grid.finals.length > 0 && (
+                            <FinalsRail finals={grid.finals} justify="space-around" />
+                          )}
+                        </>
+                      </div>
+                    ) : (
+                      <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
+                    )}
+                    {(updating && activeTab === 'tournament') ? (
+                      <div
+                        style={{
+                          height: "100%",
+                          width: "100%",
+                          position: "absolute",
+                          zIndex: 10000,
+                          top:"50%",
+                          left: "50%",
+                          transform: "translate(-50%,-50%)",
+                        }}
+                      >
+                        <PoolOrbitSolidsLoader
+                          open={updating}
+                          message={loadingMessage}
+                          size={180}
+                          backdrop="rgba(0, 0, 0, 0.2)"
+                          position="absolute"
+                          lockScroll={false}
+                        />
+                      </div>
+                    ) : null}
+                  </Section>
+
+                  {String(tournament.format).toLowerCase() === "double" && (
+                    <Section title="Losers Bracket">
+                      {grid.losers.length ? (
+                        <BracketFlex rounds={grid.losers} prefix="L" justify="space-around" />
                       ) : (
                         <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
                       )}
-                      {/* Loader */}
-              {(updating && activeTab === 'tournament') ? (
-                <div
-                    style={{
-                    height: "100%",
-                    width: "100%",
-                    position: "absolute",
-                    zIndex: 10000,
-                    top:"50%",
-                    left: "50%",
-                    transform: "translate(-50%,-50%)",
-                  }}
-                >
-                  <PoolOrbitLoaderModal
-                                    open={updating}
-                                    message={loadingMessage}
-                                    size={180}            // tweak size if you like
-                                    backdrop="rgba(0, 0, 0, 0.2)"  
-                                    position="absolute"
-                                    lockScroll={false}
-                  />
-                </div>):<></>}
                     </Section>
-
-                    {String(tournament.format).toLowerCase() === "double" && (
-                      <Section title="Losers Bracket">
-                        {grid.losers.length ? (
-                          <BracketFlex rounds={grid.losers} prefix="L" justify="space-around" />
-                        ) : (
-                          <div className="empty" style={{ fontSize:12, color:'var(--muted)' }}>No matches.</div>
-                        )}
-                      </Section>
-                    )}
-                  </div>
+                  )}
+                </div>
               ) : (
                 <div className="">
                   <Section title="Standings">
-                    <Standing 
-                    tournamentId={tid} 
-                    refreshSignal={rankingRefreshSignal} 
+                    <Standing
+                      tournamentId={tid}
+                      finishing={finishBusy}
                     />
                   </Section>
                 </div>
               )}
-
-              
             </div>
-            
-            
           </div>
         </div>
       )}
     </div>
   );
 }
-
-
-/* ---------------- inline styles (kept minimal & consistent with your theme) ---------------- */
-const panel     = { border:'1px solid var(--ring)', background:'#191d24', borderRadius:12, padding:12, marginTop:10, marginBottom:12 };
-const inner     = {
-  display:'grid',
-  gridTemplateColumns:'260px 1fr',
-  gap:12,
-  alignItems:'start',
-  /* make the grid itself not spill */
-  overflow:'hidden',
-  position: "relative"
-};
-const leftRail  = { border:'1px solid var(--ring)', borderRadius:10, background:'#151a20', padding:12, display:'grid', gap:12, alignContent:'start' };
-const rightPane = {
-  border:'1px solid var(--ring)',
-  borderRadius:10,
-  background:'#0f141a',
-  padding:12,
-  minHeight:340,
-  /* THE IMPORTANT BITS */
-  minWidth: 0,          // allow the 1fr column to shrink
-  overflow: 'hidden',    // anything wider gets contained here
-  position: "relative",
-};
-const tab       = { width:'100%', textAlign:'left', appearance:'none', border:'1px solid var(--ring)', background:'#0f141a', color:'var(--ink)', padding:'10px 12px', borderRadius:10, cursor:'pointer', fontSize:13 };
-const tabActive = { ...tab, outline:'2px solid var(--focus)', outlineOffset:1, background:'#132032' };
 
 const gridShell = {
   border:'1px solid var(--ring)',
@@ -668,7 +629,6 @@ const mxSlotGrandFinal = {
   color: '#fff7e0',      // soft white/golden text
 };
 
-
 const scoreInputStyle = (disabled)=>({
   height:'100%', width:32, margin:0, padding:0, border:'none', borderLeft:'1px solid var(--ring)',
   textAlign:'center', fontWeight:800, fontSize:12, background: disabled ? '#262b33' : '#2d3139', color:'#bfc6d1'
@@ -679,3 +639,51 @@ const bumpStyle = (disabled)=>({
 });
 const mxActions = { display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, padding:6, background:'#1b2027', borderTop:'1px solid var(--ring)' };
 const btnSm     = { padding:'6px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--ring)', background:'#0f1a28', color:'var(--ink)', cursor:'pointer' };
+
+/* ---------------- layout styles (2 rows) ---------------- */
+const panel = { border:'1px solid var(--ring)', background:'#191d24', borderRadius:12, padding:12, marginTop:10, marginBottom:12 };
+
+const inner = {
+  display:'grid',
+  gridTemplateRows:'auto 1fr',   // <-- two rows: tabs + content
+  gap:10,
+  alignItems:'stretch',
+  overflow:'hidden',
+  position:'relative',
+};
+
+const topBar = {
+  display:'flex',
+  alignItems:'center',
+  gap:8,
+  border:'1px solid var(--ring)',
+  background:'#0f141a',
+  borderRadius:10,
+  padding:8,
+};
+
+const contentPane = {
+  border:'1px solid var(--ring)',
+  borderRadius:10,
+  background:'#0f141a',
+  padding:12,
+  minHeight:340,
+  minWidth:0,
+  overflow:'hidden',
+  position:'relative',
+};
+
+/* Tabs (horizontal) */
+const tabTop = {
+  appearance:'none',
+  border:'1px solid var(--ring)',
+  background:'#0f141a',
+  color:'var(--ink)',
+  padding:'8px 12px',
+  borderRadius:8,
+  cursor:'pointer',
+  fontSize:13
+};
+const tabActiveTop = { ...tabTop, outline:'2px solid var(--focus)', outlineOffset:1, background:'#132032' };
+
+/* Keep your existing gridShell / card styles as-is */

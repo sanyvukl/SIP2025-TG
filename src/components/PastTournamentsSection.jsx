@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
 import PastExpand from "./PastExpand";
-import { EightBallBounceModal } from "./EightBallBounce";
+import { EightBallBounceLoader } from "./EightBallBounce";
 
 const card = {
   background: "var(--panel)",
@@ -116,7 +116,7 @@ export default function PastTournamentsSection({
     }
   }
 
-  return (
+return (
     <div style={{ maxWidth: 1200, margin: "0 auto 20px" }}>
       <div className="card" style={card}>
         <div className="card-header" style={header}>
@@ -141,6 +141,7 @@ export default function PastTournamentsSection({
                 ExpandComponent={PastExpand}
                 onParticipantsChange={onParticipantsChange}
                 onDelete={handleDelete}
+                shouldClose={loading}
               />
             ))
           )}
@@ -161,11 +162,12 @@ export default function PastTournamentsSection({
           </button>
         </div>
       </div>
-      <EightBallBounceModal
+      <EightBallBounceLoader
         open={loading}
         message={loadingMessage}
         size={64}
         speed={1000}
+        closable
       />
     </div>
   );

@@ -1,73 +1,95 @@
 // src/components/Standing.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import { getRanking } from "../api/tournaments";
-import PoolOrbitLoaderModal from "./PoolOrbitLoaderModal";
-import PoolOrbitSolidsLoaderModal from "./PoolOrbitSolidsLoaderModal";
+import PoolOrbitSolidsLoader from "./Loaders/PoolOrbitSolidsLoader";
 
+const autoFetchedOnce = new Set();            // tournamentId -> true
+const rankingCache    = new Map();            // tournamentId -> rows[]
+const AUTO_REFRESH_MS = 60_000;
 
-export default function Standing({ tournamentId, refreshSignal}) {
-  const [rows, setRows] = useState([]);
+export default function Standing({ tournamentId, finishing }) {
+  const [rows, setRows]       = useState(() => rankingCache.get(tournamentId) || []);
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(null);
+  const [err, setErr]         = useState(null);
 
-  const updateLoading = (l) => {
-    setLoading(l);
-  }
-
-  async function load() {
-    try {
-      setErr(null);
-      updateLoading(true)
-      const r = await getRanking(tournamentId); // uses your existing POST API
-      setRows(Array.isArray(r) ? r : []);
-    } catch (e) {
-      setErr(e?.message || "Failed to load ranking");
-    } finally {
-      updateLoading(false);
-    }
-  }
+  // guards
+  const mountedRef = useRef(false);
+  const busyRef    = useRef(false);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setErr(null);
-        updateLoading(true);
-        const r = await getRanking(tournamentId);
-        if (!mounted) return;
-        setRows(Array.isArray(r) ? r : []);
-      } catch (e) {
-        if (!mounted) return;
-        setErr(e?.message || "Failed to load ranking");
-      } finally {
-        if (mounted) updateLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
+    mountedRef.current = true;
+    // 👉 Auto-fetch only if this tournament hasn't fetched before.
+    if (!autoFetchedOnce.has(tournamentId)) {
+      // Don't mark as fetched yet—wait for a successful, mounted result (StrictMode-safe).
+      void load(); 
+    }
+    return () => { mountedRef.current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tournamentId]);
 
+  const load = useCallback(async () => {
+    if (busyRef.current) return;       // ignore double-clicks
+    busyRef.current = true;
+    setErr(null);
+    setLoading(true);
 
-  useEffect(() => { if (refreshSignal != null) load(); }, [refreshSignal]); // refetch when matches change
+    try {
+      const r = await getRanking(tournamentId);
+      if (!mountedRef.current) return;
+
+      const next = Array.isArray(r) ? r : [];
+      setRows(next);
+      rankingCache.set(tournamentId, next);
+
+      // Mark as auto-fetched AFTER a mounted success so StrictMode remounts still get their first fetch.
+      autoFetchedOnce.add(tournamentId);
+    } catch (e) {
+      if (!mountedRef.current) return;
+      setErr(e?.message || "Failed to load ranking");
+      // Note: we intentionally DO NOT mark autoFetchedOnce on error.
+      // That way, the next time the user opens the tab, it can try again automatically.
+    } finally {
+      if (!mountedRef.current) return;
+      setLoading(false);
+      busyRef.current = false;
+    }
+  }, [tournamentId]);
+
+  useEffect(() => {
+    if (!AUTO_REFRESH_MS) return;
+
+    const id = setInterval(() => {
+      // only refresh while mounted and the tab is visible
+      if (mountedRef.current && !document.hidden) {
+        void load();
+      }
+    }, AUTO_REFRESH_MS);
+
+    return () => clearInterval(id);
+  }, [load, tournamentId]);
 
   const hasRows = rows.length > 0;
-  console.log("render " + loading);
   
   return (
     <div style={wrap}>
       <div style={bar}>
         <div style={{ fontSize: 12, color: "var(--muted)" }}>
-          {hasRows ? `${rows.length} players` : "Loading players..."}
+          {loading ? "Loading…" : err ? "Error" : hasRows ? `${rows.length} players` : "No data"}
         </div>
-        <button onClick={load} style={btn}>Refresh</button>
+        <button onClick={load} style={btn} disabled={loading}>
+          {loading ? "Loading…" : "Refresh"}
+        </button>
       </div>
 
-      {loading ? (
-        <div style={{ fontSize: 12, color: "var(--muted)" }}>Loading standings…</div>
-      ) : err ? (
-        <div style={{ fontSize: 12, color: "#fca5a5" }}>Error: {err}</div>
-      ) : !hasRows ? (
+      {err && !loading && (
+        <div style={{ fontSize: 12, color: "#fca5a5", marginBottom: 8 }}>Error: {err}</div>
+      )}
+
+      {!loading && !err && !hasRows && (
         <div style={{ fontSize: 12, color: "var(--muted)" }}>No standings yet.</div>
-      ) : (
+      )}
+
+      {!loading && !err && hasRows && (
         <div style={tableWrap}>
           <table style={table}>
             <thead>
@@ -92,9 +114,11 @@ export default function Standing({ tournamentId, refreshSignal}) {
                   <td style={tdCtr}>{r.seed ?? "—"}</td>
                   <td style={tdCtr}>{r.wins}</td>
                   <td style={tdCtr}>{r.losses}</td>
-                  <td style={tdCtr}>{(r.win_pct * 100).toFixed(0)}%</td>
+                  <td style={tdCtr}>
+                    {Number.isFinite(r?.win_pct) ? Math.round(r.win_pct * 100) + "%" : "—"}
+                  </td>
                   <td style={tdCtr}>{r.frames_for}:{r.frames_against}</td>
-                  <td style={tdCtr}>{r.frame_diff >= 0 ? `+${r.frame_diff}` : r.frame_diff}</td>
+                  <td style={tdCtr}>{(r.frame_diff ?? 0) >= 0 ? `+${r.frame_diff}` : r.frame_diff}</td>
                   <td style={tdCtr}>
                     {r.last_result ? (
                       <span style={{
@@ -102,8 +126,8 @@ export default function Standing({ tournamentId, refreshSignal}) {
                         padding:'2px 6px',
                         borderRadius:6,
                         background: r.last_result === 'W' ? '#12301b' : '#301214',
-                        color: r.last_result === 'W' ? '#a7f3d0' : '#fecaca',
-                        border:`1px solid ${r.last_result === 'W' ? '#1f5030' : '#5a1d22'}`
+                        color:      r.last_result === 'W' ? '#a7f3d0' : '#fecaca',
+                        border:     `1px solid ${r.last_result === 'W' ? '#1f5030' : '#5a1d22'}`
                       }}>
                         {r.last_result}
                       </span>
@@ -124,34 +148,36 @@ export default function Standing({ tournamentId, refreshSignal}) {
           </table>
         </div>
       )}
-
-      {loading ? 
-      <div
+      
+      {(loading || finishing) && (
+        <div
           style={{
-          height: "100%",
-          width: "100%",
-          position: "absolute",
-          zIndex: 10000,
-          top:"50%",
-          left: "50%",
-          transform: "translate(-50%,-50%)",
-        }}
-      >
-        <PoolOrbitSolidsLoaderModal
-            open={loading}
-            message={"Loading..."}
-            size={180}            // tweak size if you like
-            backdrop="rgba(0, 0, 0, 0.2)"  
+            position: "absolute",
+            inset: 0,
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "all",
+            background: "rgba(0,0,0,0.2)"
+          }}
+        >
+          <PoolOrbitSolidsLoader
+            open={loading || finishing}
+            message={finishing ? "Finishing the tournament..." : "Loading..."}
+            size={180}
+            backdrop="transparent"
             position="absolute"
             lockScroll={false}
-        />
-      </div> : <></>}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
-/* ---- local styles (match your theme) ---- */
-const wrap = { border:'1px solid var(--ring)', borderRadius:8, background:'#11161d', padding:12, position: "relative", minHeight: "300px" };
+/* ---- local styles ---- */
+const wrap = { border:'1px solid var(--ring)', borderRadius:8, background:'#11161d', padding:12, position: "relative", minHeight: 300 };
 const bar  = { display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 };
 const btn  = { padding:'6px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--ring)', background:'#0f1a28', color:'var(--ink)', cursor:'pointer' };
 const tableWrap = { overflow:'auto', border:'1px solid var(--ring)', borderRadius:6 };

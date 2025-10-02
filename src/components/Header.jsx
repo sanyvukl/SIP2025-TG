@@ -10,6 +10,7 @@ export default function Header() {
         background: "#11161d",
         borderBottom: "1px solid #2b3140",
         padding: "14px 24px",
+        zIndex: 9999
       }}
     >
       <nav
