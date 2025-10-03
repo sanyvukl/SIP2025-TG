@@ -17,7 +17,7 @@ function usePrefersReducedMotion() {
   return prefers;
 }
 
-function LoaderOneAnimation({
+function LoaderTwoAnimation({
   size,
   color,
   thickness,
@@ -46,7 +46,7 @@ function LoaderOneAnimation({
     <div style={{marginBottom: "20px"}}>
         <div
         key={restartKey}                
-        className="loaderOne"
+        className="loaderTwo"
         style={styleVars}
         aria-hidden="true"
         />
@@ -54,7 +54,7 @@ function LoaderOneAnimation({
   );
 }
 
-export default function LoaderOne({
+export default function LoaderTwo({
   // Wrapper / shell options (handled by LoaderWrapper)
   open = true,
   message = "Loading…",
@@ -101,7 +101,7 @@ export default function LoaderOne({
       aria-live="polite"
       aria-busy={open ? "true" : "false"}
     >
-      <LoaderOneAnimation
+      <LoaderTwoAnimation
         size={size}
         color={color}
         thickness={thickness}
