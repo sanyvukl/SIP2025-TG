@@ -56,9 +56,57 @@
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:30}
   .modal{width:min(1100px,95vw);max-height:90vh;background:#0f141a;border:1px solid var(--ring);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
 .modal-backdrop.show{display:flex}
-  .modal-h{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--ring);gap:8px}
-  .modal-h .title{font-weight:700}
-  .tabs{display:flex;gap:8px}
+
+
+  .modal-h{
+    display:flex;
+    flex-direction: column;
+    padding:12px;
+    border-bottom:1px solid var(--ring);
+    gap:8px
+  }
+
+  .title-row .title{font-weight:700; font-size: 16px;}
+  .title-row{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+  .details-row{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .details-row .format{
+    font-size: 12px;
+    color: #eee;
+  }
+  .details-row .players{
+    font-size: 12px;
+    color: #eee;
+  }
+  .details-row .game-to{
+    font-size: 12px;
+    color: #eee;
+  }
+  .status-box{
+    display:flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+  .status .status-indicator{
+    color: rgb(220, 92, 92);
+    padding-left: 5px;
+  }
+  .status-box div{
+    gap:8px; max-width: max-content;
+    appearance:none;border:1px solid var(--ring);
+    background:#0f141a;color:var(--ink);
+    padding:8px 10px;border-radius:8px;
+  }
+  .tabs{display:flex;gap:8px; max-width: max-content;}
   .tab{appearance:none;border:1px solid var(--ring);background:#0f141a;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer}
   .tab.active{outline:2px solid var(--focus);outline-offset:1px;background:#132032}
   .modal-b{padding:12px;overflow:auto}
@@ -128,16 +176,23 @@
   <div id="modal" class="modal-backdrop">
     <div class="modal">
       <div class="modal-h">
-        <div>
-          <div class="title" id="mTitle">Tournament</div>
-          <div class="k" id="mSubtitle"></div>
+        <div class="title-row">
+            <div class="title" id="mTitle">Tournament</div>
         </div>
-        <div class="inline-chips" id="mChips"></div>
-        <div style="margin-left:auto" class="tabs">
-          <button class="tab active" data-tab="tournament">Tournament</button>
-          <button class="tab" data-tab="ranking">Ranking</button>
-          <button class="btn ghost" id="closeBtn">Close</button>
-        </div>
+        <div class="details-row">
+          <div class="status-box">
+              <div class="status" id="mStatus">Live <span class="status-indicator">●</span></div>
+              <div class="format" id="mFormat">Single Elimination</div>
+              <div class="players" id="mPlayers">10 Participants </div>
+              <div class="game-to" id="mGameTo">Game to: 3</div>
+          </div>
+          <div class="tabs">
+            <button class="tab active" data-tab="tournament">Tournament</button>
+            <button class="tab" data-tab="ranking">Ranking</button>
+            <button class="btn ghost" id="closeBtn">Close</button>
+          </div>
+      </div>
+        
       </div>
       <div class="modal-b">
         <div id="tabTournament">
@@ -174,7 +229,7 @@
                 <thead>
                   <tr>
                     <th>#</th><th>Player</th><th>Seed</th><th>W</th><th>L</th><th>Win %</th>
-                    <th>Frames +</th><th>Frames −</th><th>Diff</th><th>Elim</th><th class="right">Last</th>
+                    <th>Frames</th><th>Diff</th><th>Elim</th><th>Latest</th>
                   </tr>
                 </thead>
                 <tbody id="rkBody"></tbody>
@@ -182,6 +237,8 @@
             </div>
           </div>
         </div>
+
+        <div id="tabPlayers" style="display:none"></div>
       </div><!-- /modal-b -->
     </div>
   </div>
@@ -461,11 +518,11 @@ function splitMatches(ms){
 function makeMatchCard(m, playersById, isGF=false){
   const A = playersById[m.slot_a_player_id]||{};
   const B = playersById[m.slot_b_player_id]||{};
-  const aSeed = A.seed ?? '–';
-  const bSeed = B.seed ?? '–';
+  const aSeed = A.seed ?? '-';
+  const bSeed = B.seed ?? '-';
 
-  let isAbye = aSeed == '–';
-  let isBbye = bSeed == '–';
+  let isAbye = ((aSeed == '-') && bSeed != '-');
+  let isBbye = ((bSeed == '-') && aSeed != '-');
 
   const aScore = (m.slot_a_score===''||m.slot_a_score==null)?0:Number(m.slot_a_score);
   const bScore = (m.slot_b_score===''||m.slot_b_score==null)?0:Number(m.slot_b_score);
@@ -479,14 +536,14 @@ function makeMatchCard(m, playersById, isGF=false){
         <div class="mx-seed">${esc(aSeed)}</div>
         <div class="mx-name" title="${esc(A.name||'—')}">${esc(A.name||'—')}</div>
       </div>
-      <div class="mx-score ${(meta.race_to == aScore || isBbye) ? "winner" : ""}"><span>${aScore}</span></div>
+      <div class="mx-score ${((meta.race_to == aScore) || isBbye) ? "winner" : ""}"><span>${aScore}</span></div>
     </div>
     <div class="mx-slot">
       <div class="mx-left">
         <div class="mx-seed">${esc(bSeed)}</div>
         <div class="mx-name" title="${esc(B.name||'—')}">${esc(B.name||'—')}</div>
       </div>
-      <div class="mx-score ${(meta.race_to == bScore || isAbye) ? "winner" : ""}"><span>${bScore}</span></div>
+      <div class="mx-score ${((meta.race_to == bScore) || isAbye) ? "winner" : ""}"><span>${bScore}</span></div>
     </div>
   `;
   return wrap;
@@ -625,6 +682,15 @@ const Ranking = (() => {
   // stable key for a row — prefer player id if present; fallback to name+seed
   const keyOf = (s) => String(s.player_id ?? `${s.name || ''}#${s.seed ?? ''}`);
 
+  const getTime = (t) =>{
+    if(!t)return "";
+    time = new Date(t);
+
+    hours = time.getHours();
+    minutes = time.getMinutes();
+
+    return `${hours}:${minutes}`;
+  }
   // normalized shape used for diffing
   const norm = (s) => ({
     key: keyOf(s),
@@ -636,10 +702,9 @@ const Ranking = (() => {
     win_pct: Number((s.win_pct ?? 0) * 100), // store as %
     frames_for: Number(s.frames_for ?? 0),
     frames_against: Number(s.frames_against ?? 0),
-    frame_diff: Number(s.frame_diff ?? 0),
+    frame_diff: (Number(s.frame_diff) >= 0 ? '+' : '') + `${Number(s.frame_diff)}` ,
     eliminated: !!s.eliminated,
     last_result: String(s.last_result ?? ''),
-    last_result_at: s.last_result_at ? new Date(s.last_result_at).toLocaleString() : ''
   });
 
   // render a single <tr> (used on insert)
@@ -653,11 +718,10 @@ const Ranking = (() => {
       <td class="cell-wins">${r.wins}</td>
       <td class="cell-losses">${r.losses}</td>
       <td class="cell-winpct">${r.win_pct.toFixed(1)}%</td>
-      <td class="cell-fp">${r.frames_for}</td>
-      <td class="cell-fa">${r.frames_against}</td>
+      <td class="cell-fp">${r.frames_for}:${r.frames_against}</td>
       <td class="cell-diff">${r.frame_diff}</td>
       <td class="cell-elim">${r.eliminated ? 'Yes':'No'}</td>
-      <td class="cell-last right">${esc(r.last_result)}${r.last_result_at ? ' · '+esc(r.last_result_at):''}</td>
+      <td class="cell-last">${esc(r.last_result)}</td>
     `;
     return tr;
   }
@@ -806,12 +870,11 @@ const Ranking = (() => {
 async function openModal(t){
   // meta header
   $('#mTitle').textContent = t.name || 'Tournament';
-  $('#mSubtitle').textContent = `${fmtFormat(t.format)} · Race to ${t.race_to} · ${fmtDate(t.start_time)}`;
-  const chips = $('#mChips');
-  chips.innerHTML = '';
-  const chip = (txt)=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=txt; return s; };
-  chips.appendChild(chip(`Players: ${Number(t.player_count)||0}`));
-  chips.appendChild(chip(`Status: ${String(t.status||'').toUpperCase()}`));
+  // const chips = $('#mChips');
+  // chips.innerHTML = '';
+  // const chip = (txt)=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=txt; return s; };
+  // chips.appendChild(chip(`Players: ${Number(t.player_count)||0}`));
+  // chips.appendChild(chip(`Status: ${String(t.status||'').toUpperCase()}`));
 
   // ensure Tournament tab visible by default
   $$('.tab').forEach(b=>b.classList.remove('active'));
