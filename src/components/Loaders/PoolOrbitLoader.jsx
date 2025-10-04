@@ -8,8 +8,8 @@ function PoolOrbitAnimation({
   svgKey,              // optional: when this changes, <svg key> forces SMIL restart
   className,
   style,
-  innerDur = "1.6s",
-  outerDur = "2.2s",
+  innerDur = "3.6s",
+  outerDur = "3.2s",
 }) {
   const rawId = useId();
   const uid = String(rawId).replace(/[^a-zA-Z0-9_-]/g, "");
@@ -80,15 +80,13 @@ function PoolOrbitAnimation({
         <g>
           <g>
             <animateTransform
-              attributeName="transform"
-              attributeType="XML"
-              type="rotate"
-              begin="0s"
-              dur={innerDur}
-              repeatCount="indefinite"
-              calcMode="linear"
-              restart="always"
               values="0 80 80; 360 80 80"
+              attributeName="transform"
+              type="rotate"
+              from="0 80 80"
+              to="360 80 80"
+              dur="2.6s"
+              repeatCount="indefinite"
             />
             {/* radius = 52; 360/7 ≈ 51.4286 */}
             <g transform="rotate(0 80 80) translate(0 -52)" filter={`url(#${ids.miniShadow})`}>
@@ -140,15 +138,12 @@ function PoolOrbitAnimation({
         <g>
           <g>
             <animateTransform
-              attributeName="transform"
-              attributeType="XML"
-              type="rotate"
-              begin="0s"
-              dur={outerDur}
-              repeatCount="indefinite"
               calcMode="linear"
-              restart="always"
               values="360 80 80; 0 80 80"
+              attributeName="transform"
+              type="rotate"
+              dur="2.6s"
+              repeatCount="indefinite"
             />
             {/* radius = 68; half-step offset so rings interleave nicely */}
             <g transform="rotate(25.7143 80 80) translate(0 -68)" filter={`url(#${ids.miniShadow})`}>
@@ -219,8 +214,8 @@ export default function PoolOrbitLoader({
   onBackdropClick,
   className,
   closeButtonLabel = "X",
-  innerDur = "1s",
-  outerDur = "1.1s",
+  innerDur = "3s",
+  outerDur = "3.1s",
 }) {
   const [svgKey, setSvgKey] = useState(0);
 

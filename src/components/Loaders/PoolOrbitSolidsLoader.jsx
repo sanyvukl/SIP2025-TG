@@ -72,7 +72,7 @@ function PoolOrbitSolidsAnimation({
               type="rotate"
               from="0 80 80"
               to="360 80 80"
-              dur="1.6s"
+              dur="2.6s"
               repeatCount="indefinite"
             />
             {/* 7 positions around the circle */}

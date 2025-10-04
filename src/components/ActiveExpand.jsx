@@ -35,6 +35,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
   const [finishBusy, setFinishBusy] = useState(false);
   const [activeTab, setActiveTab] = useState('tournament'); // 'tournament' | 'ranking'
 
+
   const raceTo = Number(tournament.race_to || 0);
 
   useEffect(() => {

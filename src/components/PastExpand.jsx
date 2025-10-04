@@ -1,7 +1,7 @@
 // src/components/PastExpand.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { getRanking, listPlayers, listMatches } from "../api/tournaments";
-import PoolOrbitLoader from "./Loaders/PoolOrbitLoader";
+import PoolOrbitSolidsLoader from "./Loaders/PoolOrbitSolidsLoader";
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -351,7 +351,7 @@ const fmtDiff = (v) =>
     <div className="past-panel" style={panel}>
       {loading ? (
         <div className="k" style={{ height: "360px", position: "relative" }}>
-          <PoolOrbitLoader
+          <PoolOrbitSolidsLoader
             open={loading}
             message={loadingMessage}
             size={160}

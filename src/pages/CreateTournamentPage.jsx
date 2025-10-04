@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { createTournament, createPlayers } from "../api/tournaments";
 import { useNavigate } from "react-router-dom";
-import PoolOrbitLoader from "../components/Loaders/PoolOrbitLoader";
+import PoolOrbitSolidsLoader from "../components/Loaders/PoolOrbitSolidsLoader";
 import path from "../utils/paths";
 
 function SummaryCard({ name, format, raceTo, playerCount }) {
@@ -215,7 +215,7 @@ Player 4`}
           playerCount={playerCount}
         />
         {/* Show the full-screen loader while submitting */}
-        <PoolOrbitLoader
+        <PoolOrbitSolidsLoader
           open={submitting}
           message={loadingMessage}
           size={180}            // tweak size if you like

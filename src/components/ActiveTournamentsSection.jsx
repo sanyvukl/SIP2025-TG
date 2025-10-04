@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
 import ActiveExpand from "./ActiveExpand";
@@ -49,6 +50,33 @@ export default function ActiveTournamentsSection({
   const [loadingMessage, setLoadingMessage] = useState("Fetching tournaments…");
   const [autoRefresh, setAutoRefresh] = useState(false);
   const timerRef = useRef(null);
+
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const queryTid = searchParams.get("tid");          
+  const stateTid = location.state?.autoOpenTid ? String(location.state.autoOpenTid) : null; 
+  const desiredTid = (queryTid ?? stateTid) ? String(queryTid ?? stateTid) : null;
+  const [expandedTid, setExpandedTid] = useState(null);
+  const tidClearedRef = useRef(false);
+
+
+  useEffect(() => {
+    // your previous effect(s)
+    if (!desiredTid) return;
+    // Wait until list is loaded
+    // Example: if you store tournaments in `items`
+    if (!items || !items.length) return;
+    const hasIt = items.some(t => String(t.id) === String(desiredTid));
+    if (!hasIt) return;
+    setExpandedTid(String(desiredTid));
+
+    if (queryTid && !tidClearedRef.current) {
+      tidClearedRef.current = true;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("tid");             
+      window.history.replaceState(window.history.state, "", url.toString());
+    }
+   }, [desiredTid, items]);
 
   async function load(p = 1) {
     setLoadingMessage("Fetching tournaments…");
@@ -152,6 +180,7 @@ export default function ActiveTournamentsSection({
                 onFinished={handleFinished}
                 onDelete={handleDelete}
                 shouldClose={loading}
+                expandedTid={expandedTid}
               />
             ))
           )}

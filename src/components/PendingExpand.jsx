@@ -8,12 +8,8 @@ import {
 } from "../api/tournaments";
 import { useNavigate } from "react-router-dom";
 import path from "../utils/paths";
-import PoolOrbitLoader from "./Loaders/PoolOrbitLoader";
+import PoolOrbitSolidsLoader from "./Loaders/PoolOrbitSolidsLoader";
 
-// small helpers
-const cssEscape = (s) => String(s).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
-const escapeHtml = (s) =>
-  String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 export default function PendingExpand({ tournament, onBecameActive, onParticipantsChange }) {
   const tid = tournament.id;
@@ -218,7 +214,10 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
       );
       onBecameActive?.(tid);
 
-      await navigate(path.ACTIVE_TOURNAMENTS);
+      await navigate(`${path.ACTIVE_TOURNAMENTS}?tid=${encodeURIComponent(String(tid))}`, {
+        state: { autoOpenTid: String(tid) }
+      });
+
     } catch (e) {
       console.log("Failed to start: " + e.message);
     } finally {
@@ -247,7 +246,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     <div className="expand-panel" style={{ border: '1px solid var(--ring)', background: '#191d24', borderRadius: 12, padding: 12, marginBottom:12, position: "relative", overflow:"hidden" }}>
       {loading ? (
               <div className="k" style={{height: "400px"}}>
-               <PoolOrbitLoader
+               <PoolOrbitSolidsLoader
                                 open={loading || busy}
                                 message={loadingMessage}
                                 size={180}            // tweak size if you like
@@ -442,7 +441,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
                 transform: "translate(-50%,-50%)",
               }}
             >
-              <PoolOrbitLoader
+              <PoolOrbitSolidsLoader
                                 open={loading || busy}
                                 message={loadingMessage}
                                 size={180}            // tweak size if you like

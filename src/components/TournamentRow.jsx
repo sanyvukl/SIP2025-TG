@@ -42,14 +42,23 @@ export default function TournamentRow({
   onFinished,
   onDelete,
   shouldClose = false,
+  expandedTid,
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
   const [deleting, setDeleting] = useState(false);
 
+  useEffect(() => {
+    if (expandedTid == null) return;
+    const isMe = String(expandedTid) === String(t.id);
+    setExpanded(isMe);
+    // Smooth scroll to the row if it exists
+    const el = document.getElementById(`tournament_${String(expandedTid)}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [expandedTid, t.id]);
+
   useEffect(()=>{
     const kind = typeof shouldClose;
 
-    // CASE 1: boolean — close when true
     if (kind === "boolean") {
       if (shouldClose) setExpanded(false);
       return;
@@ -72,7 +81,7 @@ export default function TournamentRow({
 
   return (
     <>
-      <div className="kv" style={kvStyle}>
+      <div className="kv" id={`tournament_${t.id}`} style={kvStyle}>
         {/* Left side: name + details */}
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <span style={{ fontWeight: 700, fontSize: 16 }}>{t.name || "-"}</span>
