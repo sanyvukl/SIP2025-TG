@@ -402,25 +402,26 @@ export default function ActiveExpand({ tournament, onFinished }) {
   function BracketFlex({ rounds, prefix = 'W', justify = 'space-around' ,}) {
 
     function HeaderRow() {
-        return (
-          <div
-            className={`${prefix}-head-row`}
-            style={{
-              display: 'flex',
-              gap: 18,
-              alignItems: 'baseline',
-              zIndex: 1,
-              background: '#11161d',
-            }}
-          >
-            {rounds.map((col, i) => (
-              <BracketHeaderCell key={`${prefix}-head-${i}`}>
-                {`${prefix} · R${col.title}`}
-            </BracketHeaderCell>
-            ))}
-          </div>
-        );
-    }
+    return (
+      <div
+        className={`${prefix}-head-row`}
+        style={{
+          display: 'flex',
+          gap: 18,
+          alignItems: 'baseline',
+          zIndex: 1,
+          background: '#11161d',
+        }}
+      >
+        {rounds.map((col, i) => (
+          <BracketHeaderCell key={`${prefix}-head-${i}`}>
+            {`${prefix} · R${col.title}`}
+          </BracketHeaderCell>
+        ))}
+      </div>
+    );
+  }
+
 
     // body renderer
     function BodyRow() {
@@ -456,18 +457,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
                   gap: justify === 'space-between' ? 0 : MATCH_MARGIN_PX,
                 }}
               >
-                {col.matches.map((m) => {
-                const roundNum = Number(col.title);
-                const hideByesHere =
-                  HIDE_BYE_RULES[prefix]?.has(roundNum) === true;
-                const bye = isBye(m);
-
-                // Render a transparent placeholder for BYEs in targeted rounds
-                const content = hideByesHere && bye
-                  ? <div style={mxCardGhost} />
-                  : <MatchCard m={m} />;
-
-                return (
+                {col.matches.map((m) => (
                   <div
                     key={m.id}
                     style={{
@@ -475,10 +465,9 @@ export default function ActiveExpand({ tournament, onFinished }) {
                       transition: 'transform .12s ease, box-shadow .12s ease',
                     }}
                   >
-                    {content}
+                    <MatchCard m={m} />
                   </div>
-                );
-              })}
+                ))}
               </div>
             </div>
           ))}
@@ -546,31 +535,6 @@ export default function ActiveExpand({ tournament, onFinished }) {
         setUpdating(false);
       }
   }
-
-  function isBye(m){
-    // Hide Winners R1 BYEs from server too
-    if (m.bracket === 'W' && m.round === 1 && m?.bye) return true;
-
-    // Hide Losers R2 BYEs we just marked on server
-    // if (m.bracket === 'L' && m.round === 2 && m?.bye) return true;
-
-    return false;
-  }
-
-  // Which rounds (per bracket) should hide BYEs but keep placeholders
-  const HIDE_BYE_RULES = {
-    W: new Set([1]),  // Winners Round 1
-    L: new Set([2]),  // Losers Round 2
-  };
-
-  // A faint box that occupies the same space as a match card
-  const mxCardGhost = {
-    ...mxCard,
-    background: "transparent",
-    border: "none",
-    opacity: 0.35,
-    pointerEvents: "none",
-  };
 
 
   return (

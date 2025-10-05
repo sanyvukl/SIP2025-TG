@@ -53,21 +53,13 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     if (mode === 'seeded') {
       // 1) Top seeds get BYEs
       const sorted = [...players].sort((a, b) => (a.seed ?? Infinity) - (b.seed ?? Infinity));
-      const byeSeeds = sorted.slice(0, byeCount).map(p => p.id);
-      const rest = sorted.slice(byeCount).map(p => p.id);
+      let indexOfFirstBye = (sorted.length - byeCount);
+      const rest = sorted.slice(0, indexOfFirstBye).map(p => p.id);
+      const byeSeeds = sorted.slice(indexOfFirstBye).map(p => p.id);
 
-      // 2) Create matches: first all BYE matches (A = top seed, B = BYE), then regular pairs
+      // 2) Create matches: first all all NORMAL pairs, then BYE matches at the end
       const cards = [];
       let idx = 0;
-
-      for (let i = 0; i < byeCount; i++, idx++) {
-        cards.push({
-          id: `W1M${idx + 1}`,
-          a: byeSeeds[i],
-          b: "BYE",
-          bye: true,
-        });
-      }
 
       for (let i = 0; i < rest.length; i += 2, idx++) {
         cards.push({
@@ -75,6 +67,15 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
           a: rest[i] ?? null,
           b: rest[i + 1] ?? null,
           bye: false,
+        });
+      }
+
+      for (let i = 0; i < byeCount; i++, idx++) {
+        cards.push({
+          id: `W1M${idx + 1}`,
+          a: byeSeeds[i],
+          b: "BYE",
+          bye: true,
         });
       }
 
