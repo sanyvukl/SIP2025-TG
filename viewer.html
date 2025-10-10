@@ -211,14 +211,7 @@
               <div class="br-body" id="lBody"></div>
             </div>
           </div>
-
-          <div class="section" id="finalsSection" style="display:none">
-            <div class="section-head">Grand Final</div>
-            <div class="grid-shell">
-              <div class="br-header" id="gHead"></div>
-              <div class="br-body" id="gBody"></div>
-            </div>
-          </div>
+          
         </div>
 
         <div id="tabRanking" style="display:none">
@@ -414,31 +407,15 @@ const CurrentTournamentRefresher = (() => {
       const grid = splitMatches(matches);
 
       // Winners
-      renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-around');
-
-      // Losers (double only)
       const isDouble = String(current.format || 'single').toLowerCase() === 'double';
+      renderWinnersWithGF($('#wHead'), $('#wBody'), grid.winners, grid.finals, playersById, isDouble);
+
       $('#losersSection').style.display = isDouble ? '' : 'none';
       if (isDouble) {
         renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
       } else {
         $('#lHead').innerHTML = '';
         $('#lBody').innerHTML = '';
-      }
-
-      // Finals
-      if (grid.finals.length) {
-        $('#finalsSection').style.display = '';
-        $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">GF</div></div>`;
-        $('#gBody').innerHTML = '';
-        const c = document.createElement('div'); c.className = 'col';
-        const lane = document.createElement('div'); lane.className = 'lane'; lane.style.alignItems = 'center';
-        grid.finals.forEach(m => lane.appendChild(makeMatchCard(m, playersById, true)));
-        c.appendChild(lane); $('#gBody').appendChild(c);
-      } else {
-        $('#finalsSection').style.display = 'none';
-        $('#gHead').innerHTML = '';
-        $('#gBody').innerHTML = '';
       }
 
       if ($('#tabRanking').style.display !== 'none') {
@@ -566,6 +543,7 @@ function renderBracketArea(headEl, bodyEl, rounds, playersById, prefix='W', just
     hc.innerHTML = `<div class="round-head">${esc(prefix)} · R${esc(col.title)}</div>`;
     headEl.appendChild(hc);
   });
+
   // columns
   rounds.forEach(col=>{
     const c = document.createElement('div');
@@ -576,14 +554,47 @@ function renderBracketArea(headEl, bodyEl, rounds, playersById, prefix='W', just
     lane.style.flexDirection = "column";
     lane.style.height = "100%";
     lane.style.justifyContent = "space-around";
+
+    const roundNum = Number(col.title);
+    const hideByesHere = HIDE_BYE_RULES[prefix]?.has(roundNum) === true;
+
     col.matches.forEach(m=>{
-      lane.appendChild(makeMatchCard(m, playersById, false));
+      if (hideByesHere && isByeMatch(m, playersById)) {
+        // keep spacing but hide the visible BYE card
+        lane.appendChild(makeGhostCard());
+      } else {
+        lane.appendChild(makeMatchCard(m, playersById, false));
+      }
     });
+
     c.appendChild(lane);
     bodyEl.appendChild(c);
   });
 }
 
+/* -------------------- BYE RULES + HELPERS -------------------- */
+// Which rounds (per bracket) should hide BYEs but keep placeholders
+const HIDE_BYE_RULES = {
+  W: new Set([1]), // Winners Round 1 (hide BYEs)
+  L: new Set([]),  // (optional) e.g. new Set([2]) to hide Losers R2 BYEs
+};
+
+/** True if this match is a BYE (one-sided) or server-marked BYE */
+function isByeMatch(m, playersById) {
+  if (m?.bye) return true; // trust server if it flags BYE
+  const hasA = !!m.slot_a_player_id && !!playersById[m.slot_a_player_id];
+  const hasB = !!m.slot_b_player_id && !!playersById[m.slot_b_player_id];
+  return hasA ^ hasB; // XOR → only one side present
+}
+
+/** Transparent placeholder that occupies the same space as a match card */
+function makeGhostCard() {
+  const g = document.createElement('div');
+  g.className = 'mx';
+  g.style.visibility = 'hidden';     // keep size, hide visually
+  g.style.pointerEvents = 'none';    // not interactive
+  return g;
+}
 /* ---------- LIVE REFRESH (no window globals) ---------- */
 const LiveRefresh = (() => {
   let iv = null;
@@ -629,20 +640,6 @@ const LiveRefresh = (() => {
         $('#lBody').innerHTML = '';
       }
 
-      // Finals
-      if (grid.finals.length) {
-        $('#finalsSection').style.display = '';
-        $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">GF</div></div>`;
-        $('#gBody').innerHTML = '';
-        const c = document.createElement('div'); c.className = 'col';
-        const lane = document.createElement('div'); lane.className = 'lane'; lane.style.alignItems = 'center';
-        grid.finals.forEach(m => lane.appendChild(makeMatchCard(m, playersById, true)));
-        c.appendChild(lane); $('#gBody').appendChild(c);
-      } else {
-        $('#finalsSection').style.display = 'none';
-        $('#gHead').innerHTML = '';
-        $('#gBody').innerHTML = '';
-      }
 
       // Standings
       renderRanking(t.id);
@@ -665,6 +662,32 @@ const LiveRefresh = (() => {
   };
 })();
 
+/** Render Winners with GF appended as the last column when double elimination */
+function renderWinnersWithGF(headEl, bodyEl, winnersRounds, finals, playersById, isDouble){
+  // First paint the regular Winners columns (with BYE ghosting already inside)
+  renderBracketArea(headEl, bodyEl, winnersRounds, playersById, 'W', 'space-around');
+
+  // Then, if double-elim and finals exist, append a "GF" column on the right
+  if (isDouble && finals && finals.length){
+    // Header cell
+    const hc = document.createElement('div');
+    hc.className = 'br-head-cell';
+    hc.innerHTML = `<div class="round-head">GF</div>`;
+    headEl.appendChild(hc);
+
+    // Column with centered GF card(s)
+    const c = document.createElement('div'); 
+    c.className = 'col';
+    const lane = document.createElement('div'); 
+    lane.className = 'lane';
+    lane.style.alignItems = 'center';
+    lane.style.justifyContent = 'space-around';
+
+    finals.forEach(m => lane.appendChild(makeMatchCard(m, playersById, true)));
+    c.appendChild(lane);
+    bodyEl.appendChild(c);
+  }
+}
 
 
 /* -------------------- RANKING RENDER -------------------- */
@@ -885,7 +908,6 @@ async function openModal(t){
   // clear grids
   $('#wHead').innerHTML = $('#wBody').innerHTML = '';
   $('#lHead').innerHTML = $('#lBody').innerHTML = '';
-  $('#gHead').innerHTML = $('#gBody').innerHTML = '';
 
   showModal();
 
@@ -903,26 +925,18 @@ async function openModal(t){
     const grid = splitMatches(matches);
 
     // Winners
-    renderBracketArea($('#wHead'), $('#wBody'), grid.winners, playersById, 'W', 'space-around');
+    const isDouble = String(t.format||'single').toLowerCase()==='double';
+
+    // Winners with inline GF for double-elim
+    renderWinnersWithGF($('#wHead'), $('#wBody'), grid.winners, grid.finals, playersById, isDouble);
 
     // Losers (double only)
-    const isDouble = String(t.format||'single').toLowerCase()==='double';
     $('#losersSection').style.display = isDouble ? '' : 'none';
     if (isDouble){
       renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
     }
 
-    // Finals
-    if (grid.finals.length){
-      $('#finalsSection').style.display = '';
-      $('#gHead').innerHTML = `<div class="br-head-cell"><div class="round-head">GF</div></div>`;
-      const c = document.createElement('div'); c.className='col';
-      const lane = document.createElement('div'); lane.className='lane'; lane.style.alignItems='center';
-      grid.finals.forEach(m=> lane.appendChild(makeMatchCard(m, playersById, true)));
-      c.appendChild(lane); $('#gBody').appendChild(c);
-    } else {
-      $('#finalsSection').style.display = 'none';
-    }
+
 
     // Rankings tab content (lazy-load on open)
     renderRanking(t.id);

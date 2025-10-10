@@ -265,6 +265,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
       </div>
     );
   }
+
   function formatName(fullName) {
     if (!fullName) return "";
 
@@ -279,6 +280,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
 
     return `${firstInitial}. ${lastName}`;
   }
+
   function MatchCard({ m, isGrandFinal = false }) {
     const A = playersById[m.slot_a_player_id] || {};
     const B = playersById[m.slot_b_player_id] || {};
@@ -395,6 +397,15 @@ export default function ActiveExpand({ tournament, onFinished }) {
     );
   }
 
+  function isBye(m){
+    // Hide Winners R1 BYEs from server too
+    if (m.bracket === 'W' && m.round === 1 && m.bye) return true;
+
+    // Hide Losers R2 BYEs we just marked on server
+    if (m.bracket === 'L' && m.round === 2 && m.bye) return true;
+
+    return false;
+  }
 
   const COL_W = 240;
   const MATCH_MARGIN_PX = 16;
@@ -402,25 +413,25 @@ export default function ActiveExpand({ tournament, onFinished }) {
   function BracketFlex({ rounds, prefix = 'W', justify = 'space-around' ,}) {
 
     function HeaderRow() {
-    return (
-      <div
-        className={`${prefix}-head-row`}
-        style={{
-          display: 'flex',
-          gap: 18,
-          alignItems: 'baseline',
-          zIndex: 1,
-          background: '#11161d',
-        }}
-      >
-        {rounds.map((col, i) => (
-          <BracketHeaderCell key={`${prefix}-head-${i}`}>
-            {`${prefix} · R${col.title}`}
-          </BracketHeaderCell>
-        ))}
-      </div>
-    );
-  }
+      return (
+        <div
+          className={`${prefix}-head-row`}
+          style={{
+            display: 'flex',
+            gap: 18,
+            alignItems: 'baseline',
+            zIndex: 1,
+            background: '#11161d',
+          }}
+        >
+          {rounds.map((col, i) => (
+            <BracketHeaderCell key={`${prefix}-head-${i}`}>
+              {`${prefix} · R${col.title}`}
+            </BracketHeaderCell>
+          ))}
+        </div>
+      );
+    }
 
 
     // body renderer
