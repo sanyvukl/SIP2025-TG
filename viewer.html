@@ -38,7 +38,7 @@
     --score-win:#ff6a2f;   /* winner highlight */
   }
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
-  .wrap{max-width:1200px;margin:22px auto;padding:0 12px}
+  .wrap{max-width:1200px; min-width: 900px;margin:22px auto;padding:0 12px}
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px}
   .head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
   .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -46,7 +46,7 @@
   .btn[disabled]{opacity:.55;cursor:not-allowed}
   .btn.ghost{background:#161b23}
   .list .row{display:flex;justify-content:space-between;align-items:center;background:#191d24;border:1px solid var(--ring);border-radius:10px;padding:10px 14px;margin-bottom:8px}
-  .row .left{display:flex;align-items:center;gap:24px}
+  .row .left{display:flex;align-items:center;gap:24px; margin-right: 100px;}
   .bits{display:flex;gap:16px;flex-wrap:wrap;color:#ccc}
   .muted{color:var(--muted)}
   .pager{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
@@ -55,7 +55,7 @@
   /* Modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:30}
   .modal{width:min(1100px,95vw);max-height:90vh;background:#0f141a;border:1px solid var(--ring);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-.modal-backdrop.show{display:flex}
+  .modal-backdrop.show{display:flex}
 
 
   .modal-h{
@@ -139,7 +139,7 @@
   }
   .mx-left{display:flex;align-items:center;flex:1;min-width:0}
   .mx-seed{background:#4a4f58;color:#cfd6e3;font-size:11px;font-weight:600;min-width:24px;padding:0 4px;text-align:center;display:flex;align-items:center;justify-content:center;height:100%;border-right:1px solid var(--ring)}
-  .mx-name{flex:1;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mx-name{flex:1;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; max-width: 138px; text-align: left;}
   .mx-score{display: flex; justify-content: center; align-items: center; height:100%; width:32px; margin:0; padding:0; border:none; border-left:1px solid var(--ring);
     text-align:center; font-weight:800; font-size:12px; background:var(--score-bg); color:#bfc6d1; align-self: "center";}
   .mx-score.winner{ background:var(--score-win); color:#fff }
@@ -154,6 +154,11 @@
   /* Rankings */
   table{border-collapse:collapse;width:100%}
   th,td{border-bottom:1px solid #202632;padding:8px 10px;text-align:left}
+  .cell-name{
+    display: block;
+    max-width: 310px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis
+  }
   th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
   .right{float:right}
   /* Chips inline */
@@ -191,13 +196,12 @@
           <div class="status-box">
               <div class="status" id="mStatus">Live <span class="status-indicator">●</span></div>
               <div class="format" id="mFormat">...</div>
-              <div class="players" id="mPlayers">...</div>
               <div class="game-to" id="mGameTo">...</div>
+              <div class="players" id="mPlayers">...</div>
           </div>
           <div class="tabs">
             <button class="tab active" data-tab="tournament">Tournament</button>
             <button class="tab" data-tab="ranking">Ranking</button>
-            <button class="tab" data-tab="players">Players</button>
             <button class="btn ghost" id="closeBtn">Close</button>
           </div>
       </div>
@@ -239,8 +243,6 @@
             </div>
           </div>
         </div>
-
-        <div id="tabPlayers" style="display:none"></div>
       </div><!-- /modal-b -->
     </div>
   </div>
@@ -468,7 +470,6 @@ $$('.tab').forEach(btn=>{
 
     $('#tabTournament').style.display = (tab==='tournament') ? '' : 'none';
     $('#tabRanking').style.display   = (tab==='ranking')    ? '' : 'none';
-    $('#tabPlayers').style.display   = (tab==='players')    ? '' : 'none';
 
     const tid = $('#modal')?.dataset?.tid || null;
 
@@ -477,94 +478,6 @@ $$('.tab').forEach(btn=>{
     }
   });
 });
-
-/* -------------------- PLAYERS TAB RENDER -------------------- */
-async function renderPlayers(tournament_id){
-  const root = $('#tabPlayers');
-  if (!root) return;
-
-  // show lightweight skeleton while fetching
-  root.innerHTML = `
-    <div class="section">
-      <div class="section-head">Players</div>
-      <div class="p-wrap">
-        <div class="k" style="padding:10px">Loading…</div>
-      </div>
-    </div>
-  `;
-
-  try{
-    const players = await listPlayers(tournament_id);
-
-    if (!players?.length){
-      root.innerHTML = `
-        <div class="section">
-          <div class="section-head">Players</div>
-          <div class="p-wrap">
-            <div class="k" style="padding:10px">No players found.</div>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    // sort by numeric seed (missing seeds go last)
-    const sorted = players.slice().sort((a,b)=>{
-      const sa = Number(a.seed); const sb = Number(b.seed);
-      const aValid = Number.isFinite(sa), bValid = Number.isFinite(sb);
-      if (aValid && bValid) return sa - sb;
-      if (aValid && !bValid) return -1;
-      if (!aValid && bValid) return 1;
-      // fallback: by name
-      return String(a.name||'').localeCompare(String(b.name||''));
-    });
-
-    const wrap = document.createElement('div');
-    wrap.className = 'p-wrap';
-
-    sorted.forEach((p, i) => {
-      const row = document.createElement('div');
-      row.className = 'p-row' + (i % 2 === 1 ? ' alt' : ''); // 2nd brighter, etc.
-
-      const left = document.createElement('div');
-      left.style.display = 'flex';
-      left.style.alignItems = 'center';
-      left.style.gap = '10px';
-
-      const seed = document.createElement('div');
-      seed.className = 'p-seed';
-      seed.textContent = Number.isFinite(Number(p.seed)) ? String(p.seed) : '—';
-
-      const name = document.createElement('div');
-      name.className = 'p-name';
-      name.title = String(p.name||'');
-      name.textContent = String(p.name||'—');
-
-      left.appendChild(seed);
-      left.appendChild(name);
-
-      row.appendChild(left);
-      wrap.appendChild(row);
-    });
-
-    root.innerHTML = `
-      <div class="section">
-        <div class="section-head">Players</div>
-      </div>
-    `;
-    root.appendChild(wrap);
-
-  }catch(e){
-    root.innerHTML = `
-      <div class="section">
-        <div class="section-head">Players</div>
-        <div class="p-wrap">
-          <div class="k" style="color:#fca5a5; padding:10px">Failed to load players: ${esc(e.message||e)}</div>
-        </div>
-      </div>
-    `;
-  }
-}
 
 
 /* -------------------- MODAL META -------------------- */
@@ -630,14 +543,14 @@ function makeMatchCard(m, playersById, isGF=false){
     <div class="mx-slot">
       <div class="mx-left">
         <div class="mx-seed">${esc(aSeed)}</div>
-        <div class="mx-name" title="${esc(A.name||'—')}">${esc(A.name||'—')}</div>
+        <div class="mx-name" title="${esc(A.name||'—')}">${formatName(esc(A.name||'—'))}</div>
       </div>
       <div class="mx-score ${((meta.race_to == aScore) || isBbye) ? "winner" : ""}"><span>${aScore}</span></div>
     </div>
     <div class="mx-slot">
       <div class="mx-left">
         <div class="mx-seed">${esc(bSeed)}</div>
-        <div class="mx-name" title="${esc(B.name||'—')}">${esc(B.name||'—')}</div>
+        <div class="mx-name" title="${esc(B.name||'—')}">${formatName(esc(B.name||'—'))}</div>
       </div>
       <div class="mx-score ${((meta.race_to == bScore) || isAbye) ? "winner" : ""}"><span>${bScore}</span></div>
     </div>
@@ -697,7 +610,20 @@ const HIDE_BYE_RULES = {
   W: new Set([1]), // Winners Round 1 (hide BYEs)
   L: new Set([]),  // (optional) e.g. new Set([2]) to hide Losers R2 BYEs
 };
+function formatName(fullName) {
+  if (!fullName) return "";
 
+  const parts = fullName.trim().split(/\s+/); // split by spaces
+  if (parts.length === 1) {
+    return parts[0]; // single name only
+  }
+
+  const firstName = parts[0];
+  const lastName = parts[parts.length - 1];
+  const firstInitial = firstName.charAt(0).toUpperCase();
+
+  return `${firstInitial}. ${lastName}`;
+}
 /** True if this match is a BYE (one-sided) or server-marked BYE */
 function isByeMatch(m, playersById) {
   if (m?.bye) return true; // trust server if it flags BYE
@@ -1036,7 +962,6 @@ async function openModal(t){
 
   try{
     const [players, matches] = await Promise.all([listPlayers(t.id), listMatches(t.id)]);
-    renderPlayers(String(t.id)); 
     paintModalMeta({ format: t.format, race_to: t.race_to }, players, matches);
 
     const playersById = Object.fromEntries(players.map(p=>[String(p.id), p]));

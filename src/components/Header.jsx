@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import logo from "../media/logo.png"
 
 export default function Header() {
   const location = useLocation();
@@ -23,17 +24,7 @@ export default function Header() {
         }}
       >
         {/* Logo */}
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 22,
-            fontWeight: 700,
-            color: "#f9fafb", // clean off-white
-            letterSpacing: "0.5px",
-          }}
-        >
-          LOCK-IN
-        </h1>
+        <img src={logo} width={150} alt="App Logo" />
 
         {/* Navigation */}
         <ul

@@ -154,7 +154,7 @@ export default function PastExpand({ tournament }) {
         <div className="mx-slot" data-slot="A" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{aSeed}</div>
-            <div className="mx-name" style={mxName}>{formatName(escapeHtml(A.name || "—"))}</div>
+            <div className="mx-name" style={mxName}><span style={mxNameSpan} className="mx-name-span-sp">{formatName(escapeHtml(A.name || "—"))}</span></div>
           </div>
           <div
             className="mx-score"
@@ -172,7 +172,7 @@ export default function PastExpand({ tournament }) {
         <div className="mx-slot" data-slot="B" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{bSeed}</div>
-            <div className="mx-name" style={mxName}>{formatName(escapeHtml(B.name || "—"))}</div>
+            <div className="mx-name" style={mxName}><span style={mxNameSpan} className="mx-name-span-sp">{formatName(escapeHtml(B.name || "—"))}</span></div>
           </div>
           <div
             className="mx-score"
@@ -594,23 +594,33 @@ const mxCard = {
 };
 
 const mxSlot = { display: "flex", alignItems: "stretch", justifyContent: "space-between", background: "#3a3f48", fontSize: 13, lineHeight: 1 };
-const mxLeft = { display: "flex", alignItems: "center", flex: 1, minWidth: 0, height: "100%" };
+
+const mxLeft = { display: "flex", alignItems: "center", minWidth: 0, height: "100%" };
 const mxSeed = {
   background: "#4a4f58",
   color: "#cfd6e3",
   fontSize: 11,
   fontWeight: 600,
+  boxSizing: "border-box",
+  flex: "0 0 24px",   // ← fixed column: grow 0, shrink 0, basis 24px
+  width: 24,
   minWidth: 24,
+  maxWidth: 24,
   padding: "0 4px",
   textAlign: "center",
-  display: "flex",
+  display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   height: "100%",
   borderRight: "1px solid var(--ring)",
 };
-const mxName = { flex: 1, height: "100%", display: "flex", alignItems: "center", padding: "0 8px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" };
-
+const mxName = { flex: 1, height: "100%", display: "flex", alignItems: "center", padding: "0 8px", };
+const mxNameSpan = {
+  maxWidth: "138px", 
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis", 
+}
 const mxCardGrandFinal = {
   ...mxCard,
   background: "linear-gradient(180deg, #3a2a10 0%, #1f1608 100%)",
@@ -621,7 +631,7 @@ const mxSlotGrandFinal = { ...mxSlot, color: "#fff7e0" };
 
 const scoreReadStyle = {
   height: "100%",
-  width: 40,
+  width: 31,
   margin: 0,
   padding: 0,
   border: "none",

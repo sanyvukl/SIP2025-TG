@@ -62,6 +62,20 @@
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
+.mx-name-span{
+  max-width: "98px";
+  overflow: "hidden";
+  white-space: "nowrap";
+  text-overflow: "ellipsis";
+}
+
+.mx-name-span-sp{
+  max-width: "138px";
+  overflow: "hidden";
+  white-space: "nowrap";
+  text-overflow: "ellipsis";
+}
+
 /* score box + steppers */
 .mx-scorebox{ display:flex; align-items:stretch }
 .mx-score{

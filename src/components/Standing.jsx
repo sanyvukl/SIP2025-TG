@@ -110,7 +110,7 @@ export default function Standing({ tournamentId, finishing }) {
               {rows.map((r) => (
                 <tr key={r.player_id}>
                   <td style={tdCtr}>{r.rank}</td>
-                  <td style={tdL}>{r.name || "—"}</td>
+                  <td style={tdL}><span style={cellName}>{r.name || "—"}</span></td>
                   <td style={tdCtr}>{r.seed ?? "—"}</td>
                   <td style={tdCtr}>{r.wins}</td>
                   <td style={tdCtr}>{r.losses}</td>
@@ -166,7 +166,7 @@ export default function Standing({ tournamentId, finishing }) {
             open={loading || finishing}
             message={finishing ? "Finishing the tournament..." : "Loading..."}
             size={180}
-            backdrop="transparent"
+            backdrop="#11161d"
             position="absolute"
             lockScroll={false}
           />
@@ -177,7 +177,7 @@ export default function Standing({ tournamentId, finishing }) {
 }
 
 /* ---- local styles ---- */
-const wrap = { border:'1px solid var(--ring)', borderRadius:8, background:'#11161d', padding:12, position: "relative", minHeight: 300 };
+const wrap = { borderRadius:8, position: "relative", minHeight: 300 };
 const bar  = { display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 };
 const btn  = { padding:'6px 10px', borderRadius:8, fontSize:12, border:'1px solid var(--ring)', background:'#0f1a28', color:'var(--ink)', cursor:'pointer' };
 const tableWrap = { overflow:'auto', border:'1px solid var(--ring)', borderRadius:6 };
@@ -186,3 +186,12 @@ const th = { textAlign:'center', padding:'8px 10px', background:'#1a2029', color
 const thL = { ...th, textAlign:'left' };
 const tdCtr = { textAlign:'center', padding:'8px 10px', borderTop:'1px solid #273040' };
 const tdL = { textAlign:'left', padding:'8px 10px', borderTop:'1px solid #273040', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' };
+const cellName = {
+  display:"block",
+    minWidth: "0px",
+    width: "fit-content",
+    maxWidth: "310px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis"
+}

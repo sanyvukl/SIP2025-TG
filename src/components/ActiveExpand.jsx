@@ -296,7 +296,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
         <div className="mx-slot" data-slot="A" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{aSeed}</div>
-            <div className="mx-name" style={mxName}>{formatName(escapeHtml(A.name || "—"))}</div>
+            <div className="mx-name" style={mxName}><span className="mx-name-span" style={mxNameSpan}>{formatName(escapeHtml(A.name || "—"))}</span></div>
           </div>
           <ScoreBox m={m} slot="A" scoreWin={wins.aScoreWin} scoreEnabled={ui.scoreEnabled} />
         </div>
@@ -305,7 +305,7 @@ export default function ActiveExpand({ tournament, onFinished }) {
         <div className="mx-slot" data-slot="B" style={isGrandFinal ? mxSlotGrandFinal : mxSlot}>
           <div className="mx-left" style={mxLeft}>
             <div className="mx-seed" style={mxSeed}>{bSeed}</div>
-            <div className="mx-name" style={mxName}>{formatName(escapeHtml(B.name || "—"))}</div>
+            <div className="mx-name" style={mxName}><span className="mx-name-span" style={mxNameSpan}>{formatName(escapeHtml(B.name || "—"))}</span></div>
           </div>
           <ScoreBox m={m} slot="B" scoreWin={wins.bScoreWin} scoreEnabled={ui.scoreEnabled} />
         </div>
@@ -674,12 +674,10 @@ export default function ActiveExpand({ tournament, onFinished }) {
                 </div>
               ) : (
                 <div className="">
-                  <Section title="Standings">
                     <Standing
                       tournamentId={tid}
                       finishing={finishBusy}
                     />
-                  </Section>
                 </div>
               )}
             </div>
@@ -695,7 +693,6 @@ const gridShell = {
   borderRadius:8,
   background:'#11161d',
   padding:14,
-  height:'100%',
   width:'100%',
   maxWidth:'100%',
   overflow:'auto',              // handles both x and y
@@ -719,8 +716,13 @@ const mxCard = {
 const mxSlot    = { display:'flex', alignItems:'stretch', justifyContent:'space-between', background:'#3a3f48', fontSize:13, lineHeight:1 };
 const mxLeft    = { display:'flex', alignItems:'center', flex:1, minWidth:0, height:'100%' };
 const mxSeed    = { background:'#4a4f58', color:'#cfd6e3', fontSize:11, fontWeight:600, minWidth:24, padding:'0 4px', textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', height:'100%', borderRight:'1px solid var(--ring)' };
-const mxName    = { flex:1, height:'100%', display:'flex', alignItems:'center', padding:'0 8px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' };
-
+const mxName    = {  height:'100%', display:'flex', textAlign:'left', alignItems: "center", padding:'0 8px'};
+const mxNameSpan = {
+  maxWidth: "98px", 
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis", 
+}
 
 const mxCardGrandFinal = {
   ...mxCard,
@@ -791,4 +793,3 @@ const tabTop = {
 };
 const tabActiveTop = { ...tabTop, outline:'2px solid var(--focus)', outlineOffset:1, background:'#132032' };
 
-/* Keep your existing gridShell / card styles as-is */
