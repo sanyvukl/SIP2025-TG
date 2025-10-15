@@ -110,6 +110,17 @@
   .tab{appearance:none;border:1px solid var(--ring);background:#0f141a;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer}
   .tab.active{outline:2px solid var(--focus);outline-offset:1px;background:#132032}
   .modal-b{padding:12px;overflow:auto}
+  /* Players list */
+  .p-wrap{ border:1px solid var(--ring); border-radius:8px; background:#11161d; padding:12px }
+  .p-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:#191d24; border:1px solid var(--ring); border-radius:8px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .p-row.alt{ background: var(--panel); } /* a bit brighter than normal */
+  .p-seed{ font-size:12px; color:#cfd6e3; background:#4a4f58; border:1px solid var(--ring);
+    min-width:28px; text-align:center; border-radius:6px; padding:2px 6px; margin-right:10px }
+  .p-name{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   /* Bracket shell */
   .section{margin-bottom:18px}
   .section-head{display:flex;align-items:center;justify-content:center;font-size:12px;color:#cfd6e3;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px 0}
@@ -155,9 +166,6 @@
       <div class="head">
         <h2 style="margin:0">Active Tournaments</h2>
         <div class="tools">
-          <label class="k" style="display:inline-flex;gap:8px;align-items:center">
-            <input type="checkbox" id="autoRefreshChk"> Auto-refresh (15s)
-          </label>
           <button class="btn" id="refreshBtn">Load</button>
         </div>
       </div>
@@ -182,13 +190,14 @@
         <div class="details-row">
           <div class="status-box">
               <div class="status" id="mStatus">Live <span class="status-indicator">●</span></div>
-              <div class="format" id="mFormat">Single Elimination</div>
-              <div class="players" id="mPlayers">10 Participants </div>
-              <div class="game-to" id="mGameTo">Game to: 3</div>
+              <div class="format" id="mFormat">...</div>
+              <div class="players" id="mPlayers">...</div>
+              <div class="game-to" id="mGameTo">...</div>
           </div>
           <div class="tabs">
             <button class="tab active" data-tab="tournament">Tournament</button>
             <button class="tab" data-tab="ranking">Ranking</button>
+            <button class="tab" data-tab="players">Players</button>
             <button class="btn ghost" id="closeBtn">Close</button>
           </div>
       </div>
@@ -376,18 +385,11 @@ async function load(page=1){
     $('#refreshBtn').disabled = false;
   }
 }
+
 $('#refreshBtn').addEventListener('click', ()=>load(currentPage));
 $('#prevBtn').addEventListener('click', ()=> load(currentPage-1));
 $('#nextBtn').addEventListener('click', ()=> load(currentPage+1));
 
-/* Auto refresh */
-$('#autoRefreshChk').addEventListener('change', (e)=>{
-  if (timer) { clearInterval(timer); timer=null; }
-  if (e.target.checked){
-    load(currentPage); // immediate
-    timer = setInterval(()=>load(currentPage), 15000);
-  }
-});
 
 /* ---------- CURRENT TOURNAMENT REFRESHER (5s, no globals) ---------- */
 const CurrentTournamentRefresher = (() => {
@@ -463,17 +465,134 @@ $$('.tab').forEach(btn=>{
     $$('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    $('#tabTournament').style.display = (tab==='tournament') ? '' : 'none';
-    $('#tabRanking').style.display = (tab==='ranking') ? '' : 'none';
 
-    // Only pull/patch rankings when the tab is shown
-    if (tab === 'ranking') {
-      // detect current tournament id from modal opener context
-      const tid = $('#modal')?.dataset?.tid || null;
-      if (tid) Ranking.refresh(String(tid));
+    $('#tabTournament').style.display = (tab==='tournament') ? '' : 'none';
+    $('#tabRanking').style.display   = (tab==='ranking')    ? '' : 'none';
+    $('#tabPlayers').style.display   = (tab==='players')    ? '' : 'none';
+
+    const tid = $('#modal')?.dataset?.tid || null;
+
+    if (tab === 'ranking' && tid) {
+      Ranking.refresh(String(tid));
     }
   });
 });
+
+/* -------------------- PLAYERS TAB RENDER -------------------- */
+async function renderPlayers(tournament_id){
+  const root = $('#tabPlayers');
+  if (!root) return;
+
+  // show lightweight skeleton while fetching
+  root.innerHTML = `
+    <div class="section">
+      <div class="section-head">Players</div>
+      <div class="p-wrap">
+        <div class="k" style="padding:10px">Loading…</div>
+      </div>
+    </div>
+  `;
+
+  try{
+    const players = await listPlayers(tournament_id);
+
+    if (!players?.length){
+      root.innerHTML = `
+        <div class="section">
+          <div class="section-head">Players</div>
+          <div class="p-wrap">
+            <div class="k" style="padding:10px">No players found.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // sort by numeric seed (missing seeds go last)
+    const sorted = players.slice().sort((a,b)=>{
+      const sa = Number(a.seed); const sb = Number(b.seed);
+      const aValid = Number.isFinite(sa), bValid = Number.isFinite(sb);
+      if (aValid && bValid) return sa - sb;
+      if (aValid && !bValid) return -1;
+      if (!aValid && bValid) return 1;
+      // fallback: by name
+      return String(a.name||'').localeCompare(String(b.name||''));
+    });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'p-wrap';
+
+    sorted.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'p-row' + (i % 2 === 1 ? ' alt' : ''); // 2nd brighter, etc.
+
+      const left = document.createElement('div');
+      left.style.display = 'flex';
+      left.style.alignItems = 'center';
+      left.style.gap = '10px';
+
+      const seed = document.createElement('div');
+      seed.className = 'p-seed';
+      seed.textContent = Number.isFinite(Number(p.seed)) ? String(p.seed) : '—';
+
+      const name = document.createElement('div');
+      name.className = 'p-name';
+      name.title = String(p.name||'');
+      name.textContent = String(p.name||'—');
+
+      left.appendChild(seed);
+      left.appendChild(name);
+
+      row.appendChild(left);
+      wrap.appendChild(row);
+    });
+
+    root.innerHTML = `
+      <div class="section">
+        <div class="section-head">Players</div>
+      </div>
+    `;
+    root.appendChild(wrap);
+
+  }catch(e){
+    root.innerHTML = `
+      <div class="section">
+        <div class="section-head">Players</div>
+        <div class="p-wrap">
+          <div class="k" style="color:#fca5a5; padding:10px">Failed to load players: ${esc(e.message||e)}</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+
+/* -------------------- MODAL META -------------------- */
+function pluralize(n, one, many){ return `${n} ${n===1?one:many}`; }
+
+/** Paints status/format/players/game-to in the modal header */
+function paintModalMeta({ format, race_to }, players=[], matches=[]){
+  // Status
+  const st = $('#mStatus');
+  if (st){
+    st.innerHTML = `Live <span class="status-indicator">●</span>`;
+  }
+
+  // Format
+  const fmtEl = $('#mFormat');
+  if (fmtEl) fmtEl.innerHTML = fmtFormat(format||'—');
+
+  // Players (prefer actual fetched count)
+  const pc = Array.isArray(players) ? players.length : Number(players)||0;
+  const pEl = $('#mPlayers');
+  if (pEl) pEl.innerHTML = pluralize(pc, 'Participant', 'Participants');
+
+  // Game to
+  const gt = Number(race_to||0);
+  const gEl = $('#mGameTo');
+  if (gEl) gEl.innerHTML = `Game to: ${gt > 0 ? gt : '—'}`;
+}
+
 
 /* -------------------- BRACKET RENDER -------------------- */
 function splitMatches(ms){
@@ -624,6 +743,7 @@ const LiveRefresh = (() => {
         listPlayers(t.id),
         listMatches(t.id)
       ]);
+
       const playersById = Object.fromEntries(players.map(p => [String(p.id), p]));
       const grid = splitMatches(matches);
 
@@ -893,11 +1013,6 @@ const Ranking = (() => {
 async function openModal(t){
   // meta header
   $('#mTitle').textContent = t.name || 'Tournament';
-  // const chips = $('#mChips');
-  // chips.innerHTML = '';
-  // const chip = (txt)=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=txt; return s; };
-  // chips.appendChild(chip(`Players: ${Number(t.player_count)||0}`));
-  // chips.appendChild(chip(`Status: ${String(t.status||'').toUpperCase()}`));
 
   // ensure Tournament tab visible by default
   $$('.tab').forEach(b=>b.classList.remove('active'));
@@ -921,6 +1036,9 @@ async function openModal(t){
 
   try{
     const [players, matches] = await Promise.all([listPlayers(t.id), listMatches(t.id)]);
+    renderPlayers(String(t.id)); 
+    paintModalMeta({ format: t.format, race_to: t.race_to }, players, matches);
+
     const playersById = Object.fromEntries(players.map(p=>[String(p.id), p]));
     const grid = splitMatches(matches);
 
@@ -947,7 +1065,7 @@ async function openModal(t){
 }
 
 /* -------------------- BOOT -------------------- */
-load(1);
+load(1)
 </script>
 </body>
 </html>

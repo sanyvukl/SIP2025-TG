@@ -200,14 +200,14 @@ export default function ActiveExpand({ tournament, onFinished }) {
     patchMatch(mid, { slot_a_score: a, slot_b_score: b, __scoreBusy: true });
 
     try {
-      setUpdating(true);
+      // setUpdating(true);
       setLoadingMessage("Updating the score...");
       await saveMatchScore(tid, mid, a, b);
       console.log(`Score updated ${a}:${b}` );
     } catch (e) {
       console.log("Save failed: " + e.message);
     } finally {
-      setUpdating(false);
+      // setUpdating(false);
       patchMatch(mid, { __scoreBusy: false });
     }
   }
