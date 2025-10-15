@@ -460,7 +460,7 @@ const fmtDiff = (v) =>
             return (
               <tr key={row.id || `rk-${i}`} style={rkTr}>
                 <td style={rkTd}>{fmtNum(row.rank)}</td>
-                <td style={rkTd}>{escapeHtml(row.name)}</td>
+                <td style={rkTd}><span style={cellName}>{escapeHtml(row.name)}</span></td>
                 <td style={rkTd}>{fmtNum(row.seed)}</td>
                 <td style={rkTd}>{fmtNum(row.wins)}</td>
                 <td style={rkTd}>{fmtNum(row.losses)}</td>
@@ -691,3 +691,14 @@ const playerSeed = {
   fontSize: 12,
   fontWeight: 700,
 };
+
+const cellName = {
+  display:"block",
+    maxWidth: "120px",
+    width: "fit-content",
+    minWidth: "0px",
+    width: "fit-content",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis"
+}

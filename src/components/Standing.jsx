@@ -190,7 +190,7 @@ const cellName = {
   display:"block",
     minWidth: "0px",
     width: "fit-content",
-    maxWidth: "310px",
+    maxWidth: "190px",
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis"

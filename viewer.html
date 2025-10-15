@@ -37,7 +37,7 @@
     --score-bg:#2d3139;    /* score box */
     --score-win:#ff6a2f;   /* winner highlight */
   }
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif; font-weight: 400;}
   .wrap{max-width:1200px; min-width: 900px;margin:22px auto;padding:0 12px}
   .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px}
   .head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -154,7 +154,7 @@
   /* Rankings */
   table{border-collapse:collapse;width:100%}
   th,td{border-bottom:1px solid #202632;padding:8px 10px;text-align:left}
-  .cell-name{
+  .cell-name-span{
     display: block;
     max-width: 310px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis
@@ -163,19 +163,64 @@
   .right{float:right}
   /* Chips inline */
   .inline-chips{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* HTML: <div class="modal-loader"></div> */
+  .modal-loader-wrapper{
+    height: 400px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .loader {
+    width: 60px;
+    aspect-ratio: 1;
+    display: flex;
+    animation: l10-0 2s infinite steps(1);
+  }
+  .loader::before,
+  .loader::after {
+    content: "";
+    flex: 1;
+    animation: 
+      l10-1 1s infinite linear alternate,
+      l10-2 2s infinite steps(1) -.5s;
+  }
+  .loader::after {
+    --s:-1,-1;
+  }
+  @keyframes l10-0 {
+    0%  {transform: scaleX(1)  rotate(0deg)}
+    50% {transform: scaleX(-1) rotate(-90deg)}
+  }
+  @keyframes l10-1 {
+    0%,
+    5%   {transform:scale(var(--s,1)) translate(0px)   perspective(150px) rotateY(0deg) }
+    33%  {transform:scale(var(--s,1)) translate(-10px) perspective(150px) rotateX(0deg) }
+    66%  {transform:scale(var(--s,1)) translate(-10px) perspective(150px) rotateX(-180deg)}
+    95%,
+    100% {transform:scale(var(--s,1)) translate(0px)   perspective(150px) rotateX(-180deg)}
+  }
+  @keyframes l10-2 {
+    0%  {background:#514b82;border-radius: 0}
+    50% {background:#25b09b;border-radius: 100px 0 0 100px}
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
       <div class="head">
-        <h2 style="margin:0">Active Tournaments</h2>
+        <h3 style="margin:0">Active Tournaments</h3>
         <div class="tools">
           <button class="btn" id="refreshBtn">Load</button>
         </div>
       </div>
 
-      <div id="list" class="list"></div>
+      <div id="list" class="list" style="display: none;"></div>
+      <div id="list-loader" class="modal-loader-wrapper" style="display: flex;">
+        <div class="loader"></div>
+      </div>
 
       <div class="pager">
         <button class="btn" id="prevBtn" disabled>Prev</button>
@@ -208,7 +253,7 @@
         
       </div>
       <div class="modal-b">
-        <div id="tabTournament">
+        <div id="tabTournament" style="display:none">
           <div class="section">
             <div class="section-head">Winners Bracket</div>
             <div class="grid-shell">
@@ -242,6 +287,10 @@
               </table>
             </div>
           </div>
+        </div>
+
+        <div id="modal-loader" class="modal-loader-wrapper" style="display:flex">
+          <div class="loader"></div>
         </div>
       </div><!-- /modal-b -->
     </div>
@@ -345,14 +394,35 @@ function renderList(items){
     const btnView = document.createElement('button');
     btnView.className='btn';
     btnView.textContent='View';
-    btnView.addEventListener('click', (e)=> {
-        e.preventDefault();
-        e.stopPropagation();
-        openModal(t)
+    btnView.addEventListener('click', async (e)=> {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // If cached, show instantly (no flicker), then resume silent refresh
+      if (restoreModal(t)) {
+        const modal = $('#modal');
+        modal.dataset.tid    = String(t.id);
+        modal.dataset.format = String(t.format || 'single');
+        modal.dataset.raceTo = String(t.race_to || '');
+        meta.race_to = Number(modal.dataset.raceTo);
+
+        // keep content fresh in background
+        CurrentTournamentRefresher.start(t, 10000);
+        // If Ranking tab is showing, refresh it silently
+        if (activeTab() === 'ranking') {
+          Ranking.refresh(String(t.id));
+        }
+        return;
+      }
+
+      // No cache → clear & do normal open (will show loader as needed)
+      $('#wHead').innerHTML = $('#wBody').innerHTML = '';
+      $('#lHead').innerHTML = $('#lBody').innerHTML = '';
+      $('#rkBody').innerHTML = '';
+      openModal(t);
     });
-
+    
     right.appendChild(btnView);
-
     row.appendChild(left);
     row.appendChild(right);
     root.appendChild(row);
@@ -367,7 +437,8 @@ function syncPager(){
 }
 
 /* -------------------- LOAD -------------------- */
-async function load(page=1){
+async function load(page=1, { quiet = false } = {}){
+  if (!quiet) setListLoading(true);
   $('#refreshBtn').disabled = true;
   $('#refreshBtn').textContent = 'Refreshing…';
   try{
@@ -385,6 +456,7 @@ async function load(page=1){
     $('#refreshBtn').textContent = 'Load';
   }finally{
     $('#refreshBtn').disabled = false;
+    if (!quiet) setListLoading(false);
   }
 }
 
@@ -392,6 +464,150 @@ $('#refreshBtn').addEventListener('click', ()=>load(currentPage));
 $('#prevBtn').addEventListener('click', ()=> load(currentPage-1));
 $('#nextBtn').addEventListener('click', ()=> load(currentPage+1));
 
+/* -------------------- LOADER HELPERS -------------------- */
+function setListLoading(on){
+  const list = $('#list');
+  const spinner = $('#list-loader');
+  if (!list || !spinner) return;
+  spinner.style.display = on ? 'flex' : 'none';
+  list.style.display    = on ? 'none' : '';
+}
+
+const activeTab = () => ($('.tab.active')?.dataset.tab || 'tournament');
+function showTab(name){
+  $('#tabTournament').style.display = (name === 'tournament') ? '' : 'none';
+  $('#tabRanking').style.display   = (name === 'ranking')    ? '' : 'none';
+}
+
+function setModalLoading(on, { force = false } = {}){
+  const sp = $('#modal-loader');
+  if (!sp) return;
+
+  const show = on && (force || shouldShowModalLoader());
+
+  if (show){
+    // Hide both tabs during the initial/empty load to avoid flashes
+    $('#tabTournament').style.display = 'none';
+    $('#tabRanking').style.display    = 'none';
+    sp.style.display = 'flex';
+  } else {
+    sp.style.display = 'none';
+    // Reveal whichever tab is active
+    showTab(activeTab());
+  }
+  
+}
+
+/* -------------------- MODAL CONTENT CHECKS -------------------- */
+function hasTournamentContent(){
+  const w = $('#wBody'), l = $('#lBody');
+  const wHas = !!(w && w.children.length);
+  const lHas = !!(l && l.children.length);
+  return wHas || lHas;
+}
+
+function hasRankingContent(){
+  const tb = $('#rkBody');
+  if (!tb) return false;
+  // Treat status rows (with .k) as not content
+  const hasAnyRow = tb.children.length > 0;
+  const hasStatus = !!tb.querySelector('.k');
+  return hasAnyRow && !hasStatus;
+}
+
+function shouldShowModalLoader(){
+  // Show only when neither tab has painted real content yet
+  return !(hasTournamentContent() || hasRankingContent());
+}
+
+/* -------------------- MODAL SNAPSHOT CACHE -------------------- */
+/* -------------------- MODAL SNAPSHOT CACHE (deduped) -------------------- */
+const ModalCache = new Map(); // tid -> { snapshot, hash }
+
+/* super cheap hash for small strings */
+function simpleHash(s){
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  }
+  return String(h);
+}
+
+/* build a minimal snapshot of what we need to restore quickly */
+function buildSnapshot(){
+  return {
+    // meta text
+    title: $('#mTitle')?.textContent || '',
+    formatTxt: $('#mFormat')?.textContent || '',
+    gameToTxt: $('#mGameTo')?.textContent || '',
+    playersTxt: $('#mPlayers')?.textContent || '',
+    // tabs + which was active
+    activeTab: activeTab(),
+    // sections HTML
+    wHead: $('#wHead')?.innerHTML || '',
+    wBody: $('#wBody')?.innerHTML || '',
+    lHead: $('#lHead')?.innerHTML || '',
+    lBody: $('#lBody')?.innerHTML || '',
+    // keep ranking snapshot light; table can be large, but restoring is fine
+    rkBody: $('#rkBody')?.innerHTML || '',
+    losersVisible: ($('#losersSection')?.style.display !== 'none'),
+  };
+}
+
+function snapshotToHash(s){
+  // hash only the fields that, when changed, matter for rerender
+  return simpleHash(
+    s.title + '|' + s.formatTxt + '|' + s.gameToTxt + '|' + s.playersTxt + '|' +
+    s.activeTab + '|' +
+    s.wHead + '|' + s.wBody + '|' + s.lHead + '|' + s.lBody + '|' +
+    s.rkBody + '|' + (s.losersVisible ? '1':'0')
+  );
+}
+
+/* Update cache only if changed */
+function updateModalCache(tid){
+  const snap = buildSnapshot();
+  const hash = snapshotToHash(snap);
+  const key = String(tid);
+
+  const prev = ModalCache.get(key);
+  if (prev && prev.hash === hash) return; // no change → no work
+  ModalCache.set(key, { snapshot: snap, hash });
+}
+
+/* Restore from cache */
+function restoreModal(t){
+  const rec = ModalCache.get(String(t.id));
+  if (!rec) return false;
+  const s = rec.snapshot;
+
+  // meta
+  if ($('#mTitle'))  $('#mTitle').textContent = s.title;
+  if ($('#mFormat')) $('#mFormat').textContent = s.formatTxt;
+  if ($('#mGameTo')) $('#mGameTo').textContent = s.gameToTxt;
+  if ($('#mPlayers'))$('#mPlayers').textContent = s.playersTxt;
+
+  // content
+  if ($('#wHead')) $('#wHead').innerHTML = s.wHead;
+  if ($('#wBody')) $('#wBody').innerHTML = s.wBody;
+  if ($('#lHead')) $('#lHead').innerHTML = s.lHead;
+  if ($('#lBody')) $('#lBody').innerHTML = s.lBody;
+  if ($('#rkBody')) $('#rkBody').innerHTML = s.rkBody;
+
+  $('#losersSection').style.display = s.losersVisible ? '' : 'none';
+
+  // show modal + correct tab
+  showModal();
+  $$('.tab').forEach(b=>b.classList.remove('active'));
+  const tabBtn = $(`.tab[data-tab="${s.activeTab}"]`) || $$('.tab')[0];
+  tabBtn?.classList.add('active');
+  showTab(s.activeTab);
+
+  // no spinner when restoring cached content
+  setModalLoading(false);
+
+  return true;
+}
 
 /* ---------- CURRENT TOURNAMENT REFRESHER (5s, no globals) ---------- */
 const CurrentTournamentRefresher = (() => {
@@ -402,6 +618,7 @@ const CurrentTournamentRefresher = (() => {
     if (!current) return;
 
     try {
+
       const [players, matches] = await Promise.all([
         listPlayers(current.id),
         listMatches(current.id),
@@ -426,6 +643,8 @@ const CurrentTournamentRefresher = (() => {
         Ranking.refresh(current.id);
       }
 
+      // keep cache fresh without duplicating work (hash prevents double writes)
+      updateModalCache(current.id);
     } catch (e) {
       console.log('Tournament refresh failed:', e.message);
     }
@@ -463,7 +682,7 @@ $('#modal').addEventListener('click', (e)=>{ if (e.target===e.currentTarget) hid
 
 /* Tabs */
 $$('.tab').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click', async ()=>{
     $$('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
@@ -472,9 +691,20 @@ $$('.tab').forEach(btn=>{
     $('#tabRanking').style.display   = (tab==='ranking')    ? '' : 'none';
 
     const tid = $('#modal')?.dataset?.tid || null;
+    if (!tid) return;
 
-    if (tab === 'ranking' && tid) {
-      Ranking.refresh(String(tid));
+    if (tab === 'ranking'){
+      // If Ranking hasn't painted real rows yet, show modal loader during the first fetch
+      console.log("Ranking has content:" + hasRankingContent());
+      
+      if (!hasRankingContent()){
+        setModalLoading(true);
+        // shows only if both tabs are empty
+        try { await Ranking.refresh(String(tid), { force: true }); }
+        finally { setModalLoading(false); }
+      } else {
+        Ranking.refresh(String(tid));          // silent refresh (no loader)
+      }
     }
   });
 });
@@ -658,7 +888,7 @@ const LiveRefresh = (() => {
 
   async function refreshOnce() {
     // always keep list fresh
-    await load(currentPage).catch(() => {});
+    await load(currentPage, {quiet: true}).catch(() => {});
 
     // if modal has an active tournament, refresh its view too
     const t = getOpenTournament();
@@ -782,7 +1012,7 @@ const Ranking = (() => {
     tr.dataset.key = r.key;
     tr.innerHTML = `
       <td class="cell-rank">${r.rank}</td>
-      <td class="cell-name">${esc(r.name)}</td>
+      <td class="cell-name"><span class="cell-name-span">${esc(r.name)}</span></td>
       <td class="cell-seed">${r.seed ?? ''}</td>
       <td class="cell-wins">${r.wins}</td>
       <td class="cell-losses">${r.losses}</td>
@@ -844,11 +1074,6 @@ const Ranking = (() => {
 
     const tb = tbody();
     if (!tb) return;
-
-    // show spinner only if empty (avoid flicker during live updates)
-    if (!tb.children.length) {
-      tb.innerHTML = '<tr><td colspan="11" class="k" style="padding:16px">Loading…</td></tr>';
-    }
 
     try {
       const j = await getRanking(tid);
@@ -943,7 +1168,7 @@ async function openModal(t){
   // ensure Tournament tab visible by default
   $$('.tab').forEach(b=>b.classList.remove('active'));
   $$('.tab')[0].classList.add('active');
-  $('#tabTournament').style.display = '';
+  $('#tabTournament').style.display = 'none';
   $('#tabRanking').style.display = 'none';
 
   // clear grids
@@ -958,7 +1183,12 @@ async function openModal(t){
   modal.dataset.raceTo = String(t.race_to || '');
   meta.race_to = Number(modal.dataset.raceTo);
 
-  CurrentTournamentRefresher.start(t, 5000);
+   // mark this request so late responses can be ignored
+  const fetchToken = String(Date.now());
+  modal.dataset.fetchToken = fetchToken;
+
+  // Only show modal loader if neither tab has content yet
+  setModalLoading(true);
 
   try{
     const [players, matches] = await Promise.all([listPlayers(t.id), listMatches(t.id)]);
@@ -979,18 +1209,24 @@ async function openModal(t){
       renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
     }
 
-
+    // update cache once based on current DOM
+    updateModalCache(t.id);
 
     // Rankings tab content (lazy-load on open)
-    renderRanking(t.id);
+    await renderRanking(t.id);
 
+    setModalLoading(false);
+
+    CurrentTournamentRefresher.start(t, 10000);
   }catch(e){
     console.log('Failed to load tournament view: ' + e.message);
+    setModalLoading(false);
   }
 }
 
 /* -------------------- BOOT -------------------- */
 load(1)
 </script>
+
 </body>
 </html>
