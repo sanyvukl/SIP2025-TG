@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Active Tournaments (Read-Only)</title>
+<title>Tournaments</title>
 <style>
   :root{
     --bg:#0b1016;
@@ -37,12 +37,50 @@
     --score-bg:#2d3139;    /* score box */
     --score-win:#ff6a2f;   /* winner highlight */
   }
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif; font-weight: 400;}
-  .wrap{max-width:1200px; min-width: 900px;margin:22px auto;padding:0 12px}
-  .card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:16px}
+  html,body{margin:0;padding:0;
+    background:var(--bg);
+    color:white;
+    font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif; font-weight: 400;}
+  
+  h1,h2,h3,h4,h5,h6,p,div{
+    color: white;
+  }
+  span{
+    color: var(--ink);
+  }
+  .tournament-name{
+    color: white;
+  }
+  .scale-5{
+    transform: scale(1.05);
+  }
+  .scale-10{
+    transform: scale(1.10);
+  }
+  .scale-15{
+    transform: scale(1.15);
+  }
+  .scale-20{
+    transform: scale(1.20);
+  }
+  .scale-25{
+    transform: scale(1.25);
+  }
+
+  .wrap{max-width:1200px; min-width: 900px;margin:22px auto;padding:0 12px;}
+  .card{
+    background: rgba(24, 28, 35, 0.7);
+    backdrop-filter: blur(10px) saturate(120%);
+    border: 1px solid rgba(70, 80, 95, 0.3);
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-radius: 18px;
+    padding:16px
+  }
   .head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
   .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .btn{appearance:none;border:1px solid var(--ring);background:#101621;color:var(--ink);padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn{appearance:none;border:1px solid var(--ring);background:#101621;color:white;padding:8px 12px;border-radius:8px;cursor:pointer; font-size: 16px;}
   .btn[disabled]{opacity:.55;cursor:not-allowed}
   .btn.ghost{background:#161b23}
   .list .row{display:flex;justify-content:space-between;align-items:center;background:#191d24;border:1px solid var(--ring);border-radius:10px;padding:10px 14px;margin-bottom:8px}
@@ -54,10 +92,8 @@
   .chip{background:var(--chip);border:1px solid var(--ring);border-radius:999px;padding:2px 8px;font-size:12px}
   /* Modal */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:30}
-  .modal{width:min(1100px,95vw);max-height:90vh;background:#0f141a;border:1px solid var(--ring);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .modal{width:min(1100px,95vw);max-height:76vh;background:rgba(24, 28, 35, 1);border:1px solid var(--ring);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
   .modal-backdrop.show{display:flex}
-
-
   .modal-h{
     display:flex;
     flex-direction: column;
@@ -65,8 +101,7 @@
     border-bottom:1px solid var(--ring);
     gap:8px
   }
-
-  .title-row .title{font-weight:700; font-size: 16px;}
+  .title-row .title{font-weight:700; font-size: 20px;}
   .title-row{
     display: flex;
     align-items: center;
@@ -80,15 +115,15 @@
     align-items: center;
   }
   .details-row .format{
-    font-size: 12px;
+    font-size: 14px;
     color: #eee;
   }
   .details-row .players{
-    font-size: 12px;
+    font-size: 14px;
     color: #eee;
   }
   .details-row .game-to{
-    font-size: 12px;
+    font-size: 14px;
     color: #eee;
   }
   .status-box{
@@ -97,7 +132,7 @@
     gap: 8px;
   }
   .status .status-indicator{
-    color: rgb(220, 92, 92);
+    color: #e02b2a;
     padding-left: 5px;
   }
   .status-box div{
@@ -107,8 +142,8 @@
     padding:8px 10px;border-radius:8px;
   }
   .tabs{display:flex;gap:8px; max-width: max-content;}
-  .tab{appearance:none;border:1px solid var(--ring);background:#0f141a;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer}
-  .tab.active{outline:2px solid var(--focus);outline-offset:1px;background:#132032}
+  .tab{appearance:none;border:1px solid var(--ring);background:#0f141a;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer; font-size: 16px;}
+  .tab.active{outline:2px solid white;outline-offset:1px;background:#132032}
   .modal-b{padding:12px;overflow:auto}
   /* Players list */
   .p-wrap{ border:1px solid var(--ring); border-radius:8px; background:#11161d; padding:12px }
@@ -123,25 +158,23 @@
   .p-name{ flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   /* Bracket shell */
   .section{margin-bottom:18px}
-  .section-head{display:flex;align-items:center;justify-content:center;font-size:12px;color:#cfd6e3;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px 0}
+  .section-head{display:flex;align-items:center;justify-content:center;font-size:14px;color:#cfd6e3;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px 0}
   .grid-shell{border:1px solid var(--ring);border-radius:8px;background:#11161d;padding:14px;width:100%;overflow:auto;box-sizing:border-box}
-  .round-head{font-size:12px;color:#9aa3b2;text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px 0;text-align:center}
+  .round-head{font-size:14px;color:#9aa3b2;text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px 0;text-align:center}
   .br-header{display:flex;gap:18px;align-items:baseline;background:#11161d;position:sticky;top:0;padding-top:2px;padding-bottom:6px}
   .br-head-cell{min-width:240px;flex:0 0 auto;text-align:center}
   .br-body{display:flex;gap:18px;align-items:stretch;padding-bottom:4px}
   .col{display:flex;flex-direction:column;flex:0 0 auto;width:240px; min-height: 100%;}
   .lane{display:flex;flex-direction:column;justify-content:space-around;gap:16px; height: 100%;}
   /* Match card */
-  .mx{width:220px;border:1px solid var(--ring);border-radius:4px;overflow:hidden;background:#22262d;display:grid;grid-template-rows:28px 28px auto;}
-  .mx-slot{display:flex;align-items:stretch;justify-content:space-between;background:#3a3f48;font-size:13px,}
-  .mx-slot:first-child{
-    margin-bottom: 1px;
-  }
+  .mx{width:220px;border: 1px solid #FFFFFF24;;border-radius:4px;overflow:hidden;background:#22262d;display:grid;grid-template-rows:28px 28px auto;}
+  .mx-slot{display:flex;align-items:stretch;justify-content:space-between;background:#3a3f48;font-size:13px;}
+  .mx-slot + .mx-slot { border-top: 1px solid var(--ring); }  /* crisp divider */
   .mx-left{display:flex;align-items:center;flex:1;min-width:0}
-  .mx-seed{background:#4a4f58;color:#cfd6e3;font-size:11px;font-weight:600;min-width:24px;padding:0 4px;text-align:center;display:flex;align-items:center;justify-content:center;height:100%;border-right:1px solid var(--ring)}
+  .mx-seed{background:#4a4f58;color:#cfd6e3;font-size:13px;font-weight:600;min-width:24px;padding:0 4px;text-align:center;display:flex;align-items:center;justify-content:center;height:100%;border-right:1px solid var(--ring)}
   .mx-name{flex:1;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; max-width: 138px; text-align: left;}
   .mx-score{display: flex; justify-content: center; align-items: center; height:100%; width:32px; margin:0; padding:0; border:none; border-left:1px solid var(--ring);
-    text-align:center; font-weight:800; font-size:12px; background:var(--score-bg); color:#bfc6d1; align-self: "center";}
+    text-align:center; font-weight:800; font-size:14px; background:var(--score-bg); color:#bfc6d1; align-self: center;}
   .mx-score.winner{ background:var(--score-win); color:#fff }
   .mx-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px;background:#1b2027;border-top:1px solid var(--ring);font-size:11px}
   .badge{font-size:10px;padding:3px 6px;border-radius:6px;color:#cfd6e3;border:1px solid transparent}
@@ -154,6 +187,21 @@
   /* Rankings */
   table{border-collapse:collapse;width:100%}
   th,td{border-bottom:1px solid #202632;padding:8px 10px;text-align:left}
+  .cell-last span{
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .cell-last span.won{
+    background: rgb(18, 48, 27);
+    color: rgb(167, 243, 208);
+    border: 1px solid rgb(31, 80, 48);
+  }
+  .cell-last span.lost{
+    background: rgb(48, 18, 20);
+    color: rgb(254, 202, 202);
+    border: 1px solid rgb(90, 29, 34);
+  }
   .cell-name-span{
     display: block;
     max-width: 310px;
@@ -202,104 +250,97 @@
     100% {transform:scale(var(--s,1)) translate(0px)   perspective(150px) rotateX(-180deg)}
   }
   @keyframes l10-2 {
-    0%  {background:#514b82;border-radius: 0}
-    50% {background:#25b09b;border-radius: 100px 0 0 100px}
+    0%  {background:#f9fafb;border-radius: 0}
+    50% {background:#9ca3af;border-radius: 100px 0 0 100px}
   }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="head">
-        <h3 style="margin:0">Active Tournaments</h3>
-        <div class="tools">
-          <button class="btn" id="refreshBtn">Load</button>
-        </div>
-      </div>
-
-      <div id="list" class="list" style="display: none;"></div>
-      <div id="list-loader" class="modal-loader-wrapper" style="display: flex;">
-        <div class="loader"></div>
-      </div>
-
-      <div class="pager">
-        <button class="btn" id="prevBtn" disabled>Prev</button>
-        <span class="k" id="pageInfo">Page 1 / 1 · Total: 0</span>
-        <button class="btn" id="nextBtn" disabled>Next</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div id="modal" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-h">
-        <div class="title-row">
-            <div class="title" id="mTitle">Tournament</div>
-        </div>
-        <div class="details-row">
-          <div class="status-box">
-              <div class="status" id="mStatus">Live <span class="status-indicator">●</span></div>
-              <div class="format" id="mFormat">...</div>
-              <div class="game-to" id="mGameTo">...</div>
-              <div class="players" id="mPlayers">...</div>
-          </div>
-          <div class="tabs">
-            <button class="tab active" data-tab="tournament">Tournament</button>
-            <button class="tab" data-tab="ranking">Ranking</button>
-            <button class="btn ghost" id="closeBtn">Close</button>
-          </div>
-      </div>
-        
-      </div>
-      <div class="modal-b">
-        <div id="tabTournament" style="display:none">
-          <div class="section">
-            <div class="section-head">Winners Bracket</div>
-            <div class="grid-shell">
-              <div class="br-header" id="wHead"></div>
-              <div class="br-body" id="wBody"></div>
+      <div class="wrap scale-5">
+        <div class="card">
+          <div class="head">
+            <img width="120" src="https://cdn.prod.website-files.com/65f468704d1a4d5ffac8b9ce/667c55404e169290f9e94e53_Lockin.png" alt="Live Tournaments" srcset="">
+            <div class="tools">
+              <button class="btn" id="refreshBtn">Load</button>
             </div>
           </div>
 
-          <div class="section" id="losersSection" style="display:none">
-            <div class="section-head">Losers Bracket</div>
-            <div class="grid-shell">
-              <div class="br-header" id="lHead"></div>
-              <div class="br-body" id="lBody"></div>
-            </div>
-          </div>
-          
-        </div>
-
-        <div id="tabRanking" style="display:none">
-          <div class="section">
-            <div class="section-head">Standings</div>
-            <div id="rkWrap" class="grid-shell" style="padding:0">
-              <table id="rkTable">
-                <thead>
-                  <tr>
-                    <th>#</th><th>Player</th><th>Seed</th><th>W</th><th>L</th><th>Win %</th>
-                    <th>Frames</th><th>Diff</th><th>Elim</th><th>Latest</th>
-                  </tr>
-                </thead>
-                <tbody id="rkBody"></tbody>
-              </table>
-            </div>
+          <div id="list" class="list" style="display: none;"></div>
+          <div id="list-loader" class="modal-loader-wrapper" style="display: flex;">
+            <div class="loader"></div>
           </div>
         </div>
+      </div>
 
-        <div id="modal-loader" class="modal-loader-wrapper" style="display:flex">
-          <div class="loader"></div>
+      <!-- Modal -->
+      <div id="modal" class="modal-backdrop scale-5">
+        <div class="modal">
+          <div class="modal-h">
+            <div class="title-row">
+                <div class="title" id="mTitle">Tournament</div>
+            </div>
+            <div class="details-row">
+              <div class="status-box">
+                  <div class="status" id="mStatus">Live <span class="status-indicator">●</span></div>
+                  <div class="format" id="mFormat">...</div>
+                  <div class="game-to" id="mGameTo">...</div>
+                  <div class="players" id="mPlayers">...</div>
+              </div>
+              <div class="tabs">
+                <button class="tab active" data-tab="tournament">Tournament</button>
+                <button class="tab" data-tab="ranking">Ranking</button>
+                <button class="btn ghost" id="closeBtn">x</button>
+              </div>
+          </div>
+            
+          </div>
+          <div class="modal-b">
+            <div id="tabTournament" style="display:none">
+              <div class="section">
+                <div class="section-head">Winners Bracket</div>
+                <div class="grid-shell">
+                  <div class="br-header" id="wHead"></div>
+                  <div class="br-body" id="wBody"></div>
+                </div>
+              </div>
+
+              <div class="section" id="losersSection" style="display:none">
+                <div class="section-head">Losers Bracket</div>
+                <div class="grid-shell">
+                  <div class="br-header" id="lHead"></div>
+                  <div class="br-body" id="lBody"></div>
+                </div>
+              </div>
+              
+            </div>
+
+            <div id="tabRanking" style="display:none">
+              <div class="section">
+                <div class="section-head">Standings</div>
+                <div id="rkWrap" class="grid-shell" style="padding:0">
+                  <table id="rkTable">
+                    <thead>
+                      <tr>
+                        <th>#</th><th>Player</th><th>Seed</th><th>W</th><th>L</th><th>Win %</th>
+                        <th>Frames</th><th>Diff</th><th>Elim</th><th>Last</th>
+                      </tr>
+                    </thead>
+                    <tbody id="rkBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div id="modal-loader" class="modal-loader-wrapper" style="display:flex">
+              <div class="loader"></div>
+            </div>
+          </div><!-- /modal-b -->
         </div>
-      </div><!-- /modal-b -->
-    </div>
-  </div>
-
+      </div>
 <script>
 /* -------------------- CONFIG -------------------- */
-const API_BASE = 'https://script.google.com/macros/s/AKfycbwTcXAASeBn7eJjr7dPobxh7Lj5VtXMrClDGFZdgjgzptp8ZoC8_DT4ybmrgcGNkTaBJg/exec'; // <-- replace with your GAS Web App URL
-const PAGE_SIZE = 5;
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyo_iGxZfs3S_zirvFLbxuca6YxcNmFx-68qAYlAsQUfrioKzOduvWkq3ZiEVB2kyKMhA/exec'; 
+const PAGE_SIZE = 100;
 
 /* -------------------- UTIL -------------------- */
 const $ = (q,root=document)=>root.querySelector(q);
@@ -321,30 +362,32 @@ const fmtDate = (dt)=> {
 const toForm = (obj)=> new URLSearchParams(obj);
 
 /* -------------------- API -------------------- */
-async function apiPost(formObj){
-  const res = await fetch(API_BASE, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
-    body: toForm(formObj)
-  });
-  if (!res.ok) throw new Error('Network error '+res.status);
+async function apiGet(params = {}) {
+  const url = new URL(API_BASE);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url); // simple GET, no headers
+  if (!res.ok) throw new Error('Network error ' + res.status);
   const json = await res.json();
-  if (json && json.ok === false) throw new Error(json.error||'Server error');
+  if (json && json.ok === false) throw new Error(json.error || 'Server error');
   return json;
 }
-async function listTournaments({status='active', page=1, limit=PAGE_SIZE}={}){
-  return apiPost({ action:'listTournaments', status, page, limit });
+
+async function listTournaments({ status = 'active', page = 1, limit = PAGE_SIZE } = {}) {
+  return apiGet({ action: 'listTournaments', status, page, limit });
 }
-async function listPlayers(tournament_id){
-  const j = await apiPost({ action:'listPlayers', tournament_id });
+
+async function listPlayers(tournament_id) {
+  const j = await apiGet({ action: 'listPlayers', tournament_id });
   return j.players || [];
 }
-async function listMatches(tournament_id){
-  const j = await apiPost({ action:'listMatches', tournament_id });
+
+async function listMatches(tournament_id) {
+  const j = await apiGet({ action: 'listMatches', tournament_id });
   return j.matches || [];
 }
-async function getRanking(tournament_id){
-  return apiPost({ action:'getRanking', tournament_id });
+
+async function getRanking(tournament_id) {
+  return apiGet({ action: 'getRanking', tournament_id });
 }
 
 /* -------------------- STATE -------------------- */
@@ -372,6 +415,7 @@ function renderList(items){
     const left = document.createElement('div');
     left.className = 'left';
     const name = document.createElement('span');
+    name.className = 'tournament-name';
     name.style.fontWeight='700';
     name.style.fontSize='16px';
     name.textContent = t.name || '-';
@@ -379,9 +423,7 @@ function renderList(items){
     const bits = document.createElement('div');
     bits.className='bits';
     bits.innerHTML = `
-      <span>${esc(fmtFormat(t.format))}</span>
-      <span>Participants: ${Number(t.player_count)||0}</span>
-      <span>Date: ${esc(fmtDate(t.start_time))}</span>
+      <span>${esc(fmtDate(t.start_time))}</span>
     `;
 
     left.appendChild(name);
@@ -397,6 +439,16 @@ function renderList(items){
     btnView.addEventListener('click', async (e)=> {
       e.preventDefault();
       e.stopPropagation();
+
+      // kill any previous loop and blank the modal first
+      CurrentTournamentRefresher.stop();
+      resetModal();
+
+      // if you don't have a valid id, never try to restore (prevents cache collision on 'undefined')
+      if (!t.id) {
+        openModal(t);
+        return;
+      }
 
       // If cached, show instantly (no flicker), then resume silent refresh
       if (restoreModal(t)) {
@@ -429,12 +481,6 @@ function renderList(items){
   });
 }
 
-/* -------------------- PAGING -------------------- */
-function syncPager(){
-  $('#prevBtn').disabled = !meta.has_prev;
-  $('#nextBtn').disabled = !meta.has_next;
-  $('#pageInfo').textContent = `Page ${meta.page||currentPage} / ${meta.pages||1} · Total: ${meta.total??0}`;
-}
 
 /* -------------------- LOAD -------------------- */
 async function load(page=1, { quiet = false } = {}){
@@ -446,13 +492,11 @@ async function load(page=1, { quiet = false } = {}){
     renderList(data.tournaments||[]);
     meta = data.meta || meta;
     currentPage = meta.page || page;
-    syncPager();
     $('#refreshBtn').textContent = data.tournaments?.length ? 'Refresh' : 'Load';
   }catch(e){
     console.log('Failed to load active tournaments: ' + e.message);
     renderList([]);
     meta = { page:1,pages:1,total:0,has_prev:false,has_next:false };
-    syncPager();
     $('#refreshBtn').textContent = 'Load';
   }finally{
     $('#refreshBtn').disabled = false;
@@ -461,8 +505,6 @@ async function load(page=1, { quiet = false } = {}){
 }
 
 $('#refreshBtn').addEventListener('click', ()=>load(currentPage));
-$('#prevBtn').addEventListener('click', ()=> load(currentPage-1));
-$('#nextBtn').addEventListener('click', ()=> load(currentPage+1));
 
 /* -------------------- LOADER HELPERS -------------------- */
 function setListLoading(on){
@@ -509,10 +551,11 @@ function hasTournamentContent(){
 function hasRankingContent(){
   const tb = $('#rkBody');
   if (!tb) return false;
-  // Treat status rows (with .k) as not content
+  const modalTid = $('#modal')?.dataset?.tid || '';
+  const isCurrent = (tb.dataset.tid === modalTid);
   const hasAnyRow = tb.children.length > 0;
   const hasStatus = !!tb.querySelector('.k');
-  return hasAnyRow && !hasStatus;
+  return isCurrent && hasAnyRow && !hasStatus;
 }
 
 function shouldShowModalLoader(){
@@ -577,6 +620,7 @@ function updateModalCache(tid){
 
 /* Restore from cache */
 function restoreModal(t){
+  if (!t || !t.id) return false;
   const rec = ModalCache.get(String(t.id));
   if (!rec) return false;
   const s = rec.snapshot;
@@ -592,7 +636,12 @@ function restoreModal(t){
   if ($('#wBody')) $('#wBody').innerHTML = s.wBody;
   if ($('#lHead')) $('#lHead').innerHTML = s.lHead;
   if ($('#lBody')) $('#lBody').innerHTML = s.lBody;
-  if ($('#rkBody')) $('#rkBody').innerHTML = s.rkBody;
+
+  const rk = $('#rkBody');
+  if (rk){
+    rk.dataset.tid = String(t.id);   // <-- important
+    rk.innerHTML = s.rkBody;
+  }
 
   $('#losersSection').style.display = s.losersVisible ? '' : 'none';
 
@@ -609,6 +658,42 @@ function restoreModal(t){
   return true;
 }
 
+function resetModal() {
+  // wipe visible content
+  $('#mTitle').textContent = 'Tournament';
+  $('#mFormat').textContent = '—';
+  $('#mGameTo').textContent = '—';
+  $('#mPlayers').textContent = '—';
+
+  $('#wHead').innerHTML = '';
+  $('#wBody').innerHTML = '';
+  $('#lHead').innerHTML = '';
+  $('#lBody').innerHTML = '';
+  $('#rkBody').innerHTML = '';
+  const rk = $('#rkBody');
+  if (rk) rk.dataset.tid = '';
+
+  // default visibility
+  $('#tabTournament').style.display = 'none';
+  $('#tabRanking').style.display = 'none';
+  $('#losersSection').style.display = 'none';
+
+  // clear metadata
+  const modal = $('#modal');
+  if (modal) {
+    delete modal.dataset.tid;
+    delete modal.dataset.format;
+    delete modal.dataset.raceTo;
+    delete modal.dataset.fetchToken;
+    delete modal.dataset.rkToken; 
+  }
+
+  // show loader (optional)
+  const sp = $('#modal-loader');
+  if (sp) sp.style.display = 'flex';
+}
+
+
 /* ---------- CURRENT TOURNAMENT REFRESHER (5s, no globals) ---------- */
 const CurrentTournamentRefresher = (() => {
   let iv = null;
@@ -616,6 +701,7 @@ const CurrentTournamentRefresher = (() => {
 
   async function refreshNow() {
     if (!current) return;
+    if (!current?.id) return;
 
     try {
 
@@ -628,9 +714,8 @@ const CurrentTournamentRefresher = (() => {
       const grid = splitMatches(matches);
 
       // Winners
-      const isDouble = String(current.format || 'single').toLowerCase() === 'double';
+      const isDouble = String(current?.format || 'single').toLowerCase() === 'double';
       renderWinnersWithGF($('#wHead'), $('#wBody'), grid.winners, grid.finals, playersById, isDouble);
-
       $('#losersSection').style.display = isDouble ? '' : 'none';
       if (isDouble) {
         renderBracketArea($('#lHead'), $('#lBody'), grid.losers, playersById, 'L', 'space-around');
@@ -676,6 +761,7 @@ function showModal(){ $('#modal').classList.add('show'); }
 function hideModal(){ 
   $('#modal').classList.remove('show'); 
   CurrentTournamentRefresher.stop();
+  resetModal();
 }
 $('#closeBtn').addEventListener('click', hideModal);
 $('#modal').addEventListener('click', (e)=>{ if (e.target===e.currentTarget) hideModal(); });
@@ -694,18 +780,27 @@ $$('.tab').forEach(btn=>{
     if (!tid) return;
 
     if (tab === 'ranking'){
-      // If Ranking hasn't painted real rows yet, show modal loader during the first fetch
-      console.log("Ranking has content:" + hasRankingContent());
-      
+      const modal = $('#modal');
+      const tid = String(modal.dataset.tid || '');
+      $('#rkBody').dataset.tid = tid;
+
+      // new ranking token for this click
+      const rkToken2 = String(Date.now());
+      modal.dataset.rkToken = rkToken2;
+
       if (!hasRankingContent()){
-        setModalLoading(true);
-        // shows only if both tabs are empty
-        try { await Ranking.refresh(String(tid), { force: true }); }
-        finally { setModalLoading(false); }
+        $('#rkBody').innerHTML = '';
+        setModalLoading(true, { force: true });
+        try {
+          await Ranking.refresh(tid, { force: true, token: rkToken2 }); // pass token
+        } finally {
+          setModalLoading(false);
+        }
       } else {
-        Ranking.refresh(String(tid));          // silent refresh (no loader)
+        Ranking.refresh(tid, { token: rkToken2 }); // silent refresh still guarded
       }
     }
+
   });
 });
 
@@ -759,9 +854,10 @@ function makeMatchCard(m, playersById, isGF=false){
   const B = playersById[m.slot_b_player_id]||{};
   const aSeed = A.seed ?? '-';
   const bSeed = B.seed ?? '-';
-
-  let isAbye = ((aSeed == '-') && bSeed != '-');
-  let isBbye = ((bSeed == '-') && aSeed != '-');
+  
+  let isMatchBye = m.bye;
+  let isAbye = ((aSeed == '-') && bSeed != '-') && isMatchBye;
+  let isBbye = ((bSeed == '-') && aSeed != '-') && isMatchBye;
 
   const aScore = (m.slot_a_score===''||m.slot_a_score==null)?0:Number(m.slot_a_score);
   const bScore = (m.slot_b_score===''||m.slot_b_score==null)?0:Number(m.slot_b_score);
@@ -775,14 +871,14 @@ function makeMatchCard(m, playersById, isGF=false){
         <div class="mx-seed">${esc(aSeed)}</div>
         <div class="mx-name" title="${esc(A.name||'—')}">${formatName(esc(A.name||'—'))}</div>
       </div>
-      <div class="mx-score ${((meta.race_to == aScore) || isBbye) ? "winner" : ""}"><span>${aScore}</span></div>
+      <div class="mx-score ${(((meta.race_to == aScore) && aScore != bScore) || isBbye) ? "winner" : ""}"><span>${aScore}</span></div>
     </div>
     <div class="mx-slot">
       <div class="mx-left">
         <div class="mx-seed">${esc(bSeed)}</div>
         <div class="mx-name" title="${esc(B.name||'—')}">${formatName(esc(B.name||'—'))}</div>
       </div>
-      <div class="mx-score ${((meta.race_to == bScore) || isAbye) ? "winner" : ""}"><span>${bScore}</span></div>
+      <div class="mx-score ${(((meta.race_to == bScore) && aScore != bScore) || isAbye) ? "winner" : ""}"><span>${bScore}</span></div>
     </div>
   `;
   return wrap;
@@ -1010,6 +1106,9 @@ const Ranking = (() => {
   function renderRow(r) {
     const tr = document.createElement('tr');
     tr.dataset.key = r.key;
+    let result = esc(r.last_result);
+    let lastClass = (result == "W") ? "won" : (result == "L") ? "lost" : "";
+
     tr.innerHTML = `
       <td class="cell-rank">${r.rank}</td>
       <td class="cell-name"><span class="cell-name-span">${esc(r.name)}</span></td>
@@ -1020,7 +1119,7 @@ const Ranking = (() => {
       <td class="cell-fp">${r.frames_for}:${r.frames_against}</td>
       <td class="cell-diff">${r.frame_diff}</td>
       <td class="cell-elim">${r.eliminated ? 'Yes':'No'}</td>
-      <td class="cell-last">${esc(r.last_result)}</td>
+      <td class="cell-last"><span class="${lastClass}">${result}</span></td>
     `;
     return tr;
   }
@@ -1037,8 +1136,7 @@ const Ranking = (() => {
     set('.cell-wins', r.wins);
     set('.cell-losses', r.losses);
     set('.cell-winpct', `${r.win_pct.toFixed(1)}%`);
-    set('.cell-fp', r.frames_for);
-    set('.cell-fa', r.frames_against);
+    set('.cell-fp', `${r.frames_for}:${r.frames_against}`);
     set('.cell-diff', r.frame_diff);
     set('.cell-elim', r.eliminated ? 'Yes' : 'No');
 
@@ -1068,15 +1166,22 @@ const Ranking = (() => {
     return cache.get(tid);
   }
 
-  async function refresh(tid, { force = false } = {}) {
+  async function refresh(tid, { force = false, token = ''} = {}) {
     // only fetch/repaint if Ranking tab visible, unless forced
     if (!force && !isVisible()) return;
 
     const tb = tbody();
     if (!tb) return;
 
+    tb.dataset.tid = String(tid);
     try {
       const j = await getRanking(tid);
+
+      const modal = $('#modal');
+      if (!modal) return;
+      if (modal.dataset.tid !== String(tid)) return;      
+      if (token && modal.dataset.rkToken !== token) return;  
+
       const rows = (j.standings || []).map(norm);
 
       // initial empty state
@@ -1174,24 +1279,34 @@ async function openModal(t){
   // clear grids
   $('#wHead').innerHTML = $('#wBody').innerHTML = '';
   $('#lHead').innerHTML = $('#lBody').innerHTML = '';
+  $('#rkBody').innerHTML = '';
+  $('#rkBody').dataset.tid = String(t.id || '');
 
   showModal();
-
+  
   const modal = $('#modal');
   modal.dataset.tid = String(t.id);
   modal.dataset.format = String(t.format || 'single');
   modal.dataset.raceTo = String(t.race_to || '');
   meta.race_to = Number(modal.dataset.raceTo);
 
-   // mark this request so late responses can be ignored
-  const fetchToken = String(Date.now());
-  modal.dataset.fetchToken = fetchToken;
+  // mark this request so late responses can be ignored
+  const token = String(Date.now());
+  modal.dataset.fetchToken = token;
+
+  // --- Add these lines (ranking token) ---
+  $('#rkBody').dataset.tid = String(t.id || '');
+  const rkToken = String(Date.now());
+  modal.dataset.rkToken = rkToken;
+  // ---------------------------------------
 
   // Only show modal loader if neither tab has content yet
   setModalLoading(true);
 
   try{
     const [players, matches] = await Promise.all([listPlayers(t.id), listMatches(t.id)]);
+    if (modal.dataset.fetchToken !== token) return;
+
     paintModalMeta({ format: t.format, race_to: t.race_to }, players, matches);
 
     const playersById = Object.fromEntries(players.map(p=>[String(p.id), p]));
@@ -1213,11 +1328,15 @@ async function openModal(t){
     updateModalCache(t.id);
 
     // Rankings tab content (lazy-load on open)
-    await renderRanking(t.id);
+    await Ranking.refresh(String(t.id), { force: true, token: rkToken }); // <-- pass token
+
 
     setModalLoading(false);
 
-    CurrentTournamentRefresher.start(t, 10000);
+    // start refresher only if still the same open
+    if (modal.dataset.fetchToken === token) {
+      CurrentTournamentRefresher.start(t, 10000);
+    }
   }catch(e){
     console.log('Failed to load tournament view: ' + e.message);
     setModalLoading(false);
