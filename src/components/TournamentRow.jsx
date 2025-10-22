@@ -21,7 +21,7 @@ function fmtFormat(raw) {
 function fmtDate(dt) {
   if (!dt) return "-";
   try {
-    return new Date(dt).toLocaleString(undefined, {
+    return new Date(dt).toLocaleString('en-US', {
       year: "numeric",
       month: "short",
       day: "numeric",
