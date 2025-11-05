@@ -242,6 +242,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
     };
   }
 
+  const isShortScreen = window.innerHeight <= 550;
 
   return (
     <div className="expand-panel" style={{ border: '1px solid var(--ring)', background: '#191d24', borderRadius: 12, padding: 12, marginBottom:12, position: "relative", overflow:"hidden" }}>
@@ -347,8 +348,17 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
 
             {/* RIGHT: Round 1 Editor / Placeholder */}
             <div className="bracket-col" style={{
-              border:'1px solid var(--ring)', borderRadius:10, background:'#0f141a', padding:12,
-              maxHeight:'70vh', overflow: 'auto', WebkitOverflowScrolling:'touch'
+              border: '1px solid var(--ring)',
+              borderRadius: 10,
+              background: '#0f141a',
+              padding: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              /* key bits */
+              minHeight: 0,     // allow child to actually scroll
+              maxHeight: isShortScreen ? 490 : '70vh',   // constrain the column
+              height:"max-content",
+              overflow: 'hidden',
             }}>
               {round1.length === 0 ? (
                 <div className="match-editor-header">
@@ -356,7 +366,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
                 </div>
               ) : (
                 <>
-                  <div className="match-editor-header" style={{display:'flex', gap:8, alignItems:'center', justifyContent:'space-between', marginBottom:10}}>
+                  <div className="match-editor-header" style={{display:'flex', gap:8, alignItems:'center', justifyContent:'space-between', marginBottom:10, overflow: "unset"}}>
                     <div className="k">
                       Round 1 · Matches: {round1.length}{round1.some(m => m.bye) ? ` · (${round1.filter(m => m.bye).length} BYE${round1.filter(m => m.bye).length>1?'s':''})` : ''}
                     </div>
@@ -366,7 +376,16 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
                     </div>
                   </div>
 
-                  <div className="match-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:12, maxHeight:400, overflow:'auto' }}>
+                  <div className="match-grid" style={{ display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))',
+                        gap: 12,
+                        flex: 1,
+                        minHeight: 0,
+                        height: '100%',                 // fill the bracket-col
+                        overflow: 'auto',               // only this scrolls
+                        WebkitOverflowScrolling: 'touch',
+                        overscrollBehavior: 'contain',
+                  }}>
                     {round1.map((m) => (
                       <div key={m.id} className="match-card" style={{ border:'1px solid var(--ring)', background:'#11161d', borderRadius:10, padding:10 }}>
                         <h5 style={{ margin:0, marginBottom:8, fontSize:12, color:'#9aa3b2', textTransform:'uppercase', letterSpacing:'.04em' }}>
@@ -415,7 +434,7 @@ export default function PendingExpand({ tournament, onBecameActive, onParticipan
                     ))}
                   </div>
 
-                  <div style={{ marginTop:12 }}>
+                  <div style={{ marginTop:12, justifySelf:"flex-end" }}>
                     <button
                       className="btn"
                       style={ctrlStyle(busy || starting, { width:'100%' })}
