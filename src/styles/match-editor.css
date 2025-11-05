@@ -12,13 +12,3 @@
 .pair{ display:grid; gap:8px }
 .pair select.control{ height:auto; padding:8px 10px }
 
-@media (max-height: 550px) {
-  /* Applies when total viewport height is ~490–550px (phones in landscape) */
-  .bracket-col {
-    height: 490px !important;      /* fixed height so it stays visible */
-  }
-  .bracket-col .match-grid {
-    height: calc(490px - 80px);    /* subtract headers/buttons area */
-    overflow: auto;
-  }
-}
