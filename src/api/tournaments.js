@@ -1,13 +1,22 @@
 // Minimal API client mirroring your FormData calls
-const API_URL = 'https://script.google.com/macros/s/AKfycbz49gjvxOHVsOGlVNPubv5LZ0ejJMeUa6_v0McO0r7b1H_kcxD8j8iIjbwP75KLNOMvVg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwiI807ZiNmdgtoyOmzOv2NKsKPCgfbIBaoyUjooodujahfUlBVOpuUDS-kundPdqk0wg/exec';
 
 async function postFD(fd) {
+  const jwt = getJwt();
+  console.log('Using JWT:', jwt);
+  
+  fd.append('jwt', jwt);
+  
   const res = await fetch(API_URL, { method: 'POST', body: fd });
   const raw = await res.text();
   let data;
   try { data = JSON.parse(raw); } catch { throw new Error('Bad JSON: ' + raw); }
   if (!res.ok || !data.ok) throw new Error(data.error || 'Request failed');
   return data;
+}
+
+function getJwt() {
+  return localStorage.getItem('jwt');
 }
 
 export async function createTournament({ name, format, player_count, race_to, start_time }) {
@@ -139,3 +148,15 @@ export async function getRanking(tournament_id) {
   return data.standings; // array of ranking rows
 }
 
+async function apiGet(params = {}) {
+const url = new URL(API_URL);
+Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+const res = await fetch(url);
+if (!res.ok) throw new Error('Network error ' + res.status);
+const json = await res.json();
+return json;
+}
+
+export async function getLoginData(jwt){
+  return apiGet({ action: 'getLoginData', jwt: jwt });
+} 
