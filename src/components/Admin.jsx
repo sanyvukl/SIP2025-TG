@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { getLoginData } from "../api/tournaments";
+import LoaderTwo from "./Loaders/LoaderTwo/LoaderTwo";
 
 export default function Admin({ children }) {
   const [isAuthorized, setIsAuthorized] = useState(null);
@@ -24,8 +25,7 @@ export default function Admin({ children }) {
   };
   
   if (loading) {
-    console.log('Loading...');
-    return <div>Loading...</div>;
+    return <LoaderTwo />;
   }
   if (isAuthorized === null) {
     console.log('User not authorized yet, showing Google login.');
