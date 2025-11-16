@@ -552,8 +552,8 @@
     min-width: 0 !important;
 
     /* ~10% narrower than viewport */
-    width: 90vw !important;
-    max-width: 90vw !important;
+    width: 96vw !important;
+    max-width: 96vw !important;
     margin-left: auto !important;
     margin-right: auto !important;
 
@@ -593,7 +593,7 @@
 
 /* Optional: modal width respects the reduced container on small screens */
 @media (max-width: 900px) {
-  .lw-embed .lw-modal { width: min(90vw, 680px) !important; }
+  .lw-embed .lw-modal { width: min(96vw, 700px) !important; }
 }
 </style>
   <div class="lw-wrap">
@@ -630,7 +630,6 @@
             </div>
             <div class="lw-format" id="lw-mFormat">...</div>
             <div class="lw-game-to" id="lw-mGameTo">...</div>
-            <div class="lw-players" id="lw-mPlayers">...</div>
           </div>
           <div class="lw-tabs">
             <button class="lw-tab lw-active" data-tab="tournament">Tournament</button>
@@ -1027,18 +1026,19 @@ setModalLoading(false);
 return true;
 }
 function resetModal() {
-$('#lw-mTitle').textContent = 'Tournament';
-$('#lw-mStatus').textContent = '—';
-$('#lw-mFormat').textContent = '—';
-$('#lw-mGameTo').textContent = '—';
-$('#lw-mPlayers').textContent = '—';
-$('#lw-wHead').innerHTML = '';
-$('#lw-wBody').innerHTML = '';
-$('#lw-lHead').innerHTML = '';
-$('#lw-lBody').innerHTML = '';
-$('#lw-rkBody').innerHTML = '';
-const rk = $('#lw-rkBody');
-if (rk) rk.dataset.tid = '';
+  $('#lw-mTitle').textContent = 'Tournament';
+  $('#lw-mStatus').textContent = '—';
+  $('#lw-mFormat').textContent = '—';
+  $('#lw-mGameTo').textContent = '—';
+  const playersEl = $('#lw-mPlayers');
+  if (playersEl) playersEl.textContent = '—';
+  $('#lw-wHead').innerHTML = '';
+  $('#lw-wBody').innerHTML = '';
+  $('#lw-lHead').innerHTML = '';
+  $('#lw-lBody').innerHTML = '';
+  $('#lw-rkBody').innerHTML = '';
+  const rk = $('#lw-rkBody');
+  if (rk) rk.dataset.tid = '';
 $('#lw-tabTournament').style.display = 'none';
 $('#lw-tabRanking').style.display = 'none';
 $('#lw-losersSection').style.display = 'none';

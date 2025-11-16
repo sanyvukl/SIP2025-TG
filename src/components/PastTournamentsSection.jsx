@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
 import PastExpand from "./PastExpand";
-import { EightBallBounceLoader } from "./EightBallBounce";
+import { EightBallBounceLoader } from "./Loaders/EightBallBounce";
 
 const card = {
   background: "var(--panel)",

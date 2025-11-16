@@ -3,7 +3,7 @@ import { useSearchParams, useLocation } from "react-router-dom";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import TournamentRow from "./TournamentRow";
 import ActiveExpand from "./ActiveExpand";
-import { EightBallBounceLoader } from "./EightBallBounce";
+import { EightBallBounceLoader } from "./Loaders/EightBallBounce";
 
 const card = {
   background: "var(--panel)",

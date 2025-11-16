@@ -1,5 +1,5 @@
 // Minimal API client mirroring your FormData calls
-const API_URL = 'https://script.google.com/macros/s/AKfycbwiI807ZiNmdgtoyOmzOv2NKsKPCgfbIBaoyUjooodujahfUlBVOpuUDS-kundPdqk0wg/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxiB6JH09VTUSNx36Rhqpl1PKQyvltPdPONioPjE5y1mQda-SwPOnd9yyi2Pjpscn0oHA/exec';
 
 async function postFD(fd) {
   const jwt = getJwt();

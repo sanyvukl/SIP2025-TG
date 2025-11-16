@@ -1,5 +1,5 @@
 import React, { useEffect, useId } from "react";
-import LoaderWrapper from "./Loaders/LoaderWrapper/LoaderWrapper";
+import LoaderWrapper from "./LoaderWrapper/LoaderWrapper";
 
 /**
  * EightBallBounce
@@ -39,7 +39,8 @@ export function EightBallBounce({ size = 52, speed = 1000, style, className }) {
       role="status"
       aria-label="Loading"
       className={className}
-      style={{ width: containerW, height: containerH, position: "relative", ...style }}
+      style={{ width: containerW, height: containerH, position: "relative",    userSelect: "none",
+    pointerEvents: "auto", ...style }}
     >
       {/* Scoped styles */}
       <style>{`

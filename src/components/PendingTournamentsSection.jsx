@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { listTournaments, deleteTournament } from "../api/tournaments";
 import PendingExpand from "./PendingExpand";
 import TournamentRow from "./TournamentRow";
-import { EightBallBounceLoader } from "./EightBallBounce";
+import { EightBallBounceLoader } from "./Loaders/EightBallBounce";
 
 const cardStyle = { background: "var(--panel)", border: "1px solid var(--ring)", borderRadius: 14, padding: 16 };
 
