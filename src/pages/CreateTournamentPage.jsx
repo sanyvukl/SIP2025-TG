@@ -46,20 +46,7 @@ export default function CreateTournamentPage() {
   // derived
   const players = useMemo(() => sanitizeNames(playersRaw), [playersRaw]);
   const playerCount = players.length;
-  const fmtDate = (dt) => {
-if (!dt) return '-';
-try {
-return new Date(dt).toLocaleString('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-} catch {
-return String(dt);
-}
-};
+
   function onReset() {
     setName("");
     setFormat("single");
@@ -68,11 +55,6 @@ return String(dt);
     setPlayersRaw("");
     setErr("");
   }
-  function onSetTime(e){
-    let time = fmtDate(e);
-    setStart(time);
-  }
-
   
   async function onSubmit(e) {
     e.preventDefault();
@@ -177,7 +159,7 @@ return String(dt);
                 className="control"
                 type="datetime-local"
                 value={start}
-                onChange={e => onSetTime(e.target.value)}
+                onChange={e => setStart(e.target.value)}
                 required
               />
             </div>
