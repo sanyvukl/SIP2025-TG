@@ -13,13 +13,13 @@ import path from "../utils/paths";
 import PoolOrbitSolidsLoader from "./Loaders/PoolOrbitSolidsLoader";
 
 // Medium
-import LoaderOne from "./Loaders/LoaderOne/LoaderOne";
+//import LoaderOne from "./Loaders/LoaderOne/LoaderOne";
 
 // Calm
-import LoaderTwo from "./Loaders/LoaderTwo/LoaderTwo";
+//import LoaderTwo from "./Loaders/LoaderTwo/LoaderTwo";
 
 // Fast
-import LoaderThree from "./Loaders/LoaderThree/LoaderThree";
+//import LoaderThree from "./Loaders/LoaderThree/LoaderThree";
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
